@@ -21,6 +21,7 @@ class Describer(object):
         self.wantSequenceValues = False
         self.wantRelated = False
         self.wantForeignKeys = False
+        self.wantSynonyms = False
         self.wantTriggers = False
         self.mergeGrants = True
         self.nameOnly = False
@@ -143,6 +144,9 @@ class Describer(object):
         if self.wantForeignKeys and isinstance(object, Object.Table):
             for constraint in object.ReferencedConstraints():
                 self.ExportObject(constraint)
+        if self.wantSynonyms and object.supportsReferencedSynonyms:
+            for synonym in object.ReferencedSynonyms():
+                self.ExportObject(synonym)
 
     def ExportObjects(self, sequence):
         """Export all the objects from the interator (or sequence)."""

@@ -33,7 +33,7 @@ modules = [
 
 setup(
         name = "cx_PyOracleLib",
-        version = "2.4",
+        version = "HEAD",
         description = "Set of Python modules for handling Oracle databases",
         licence = "See LICENSE.txt",
         long_description = "Set of Python modules for handling Oracle " + \

@@ -37,7 +37,8 @@ INDEXES_ANY = """
           o.prefix_length
         from %(p_ViewPrefix)s_indexes o
         %(p_WhereClause)s
-          and o.index_type in ('NORMAL', 'IOT - TOP', 'BITMAP')"""
+          and o.index_type in ('NORMAL', 'NORMAL/REV', 'IOT - TOP', 'BITMAP',
+              'FUNCTION-BASED NORMAL', 'FUNCTION-BASED NORMAL/REV')"""
 
 INDEXES = INDEXES_ANY + """
         and not exists

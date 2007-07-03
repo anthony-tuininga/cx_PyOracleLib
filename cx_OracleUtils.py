@@ -2,6 +2,7 @@
 
 import datetime
 import getpass
+import cx_Logging
 import cx_OptionParser
 import cx_Oracle
 import cx_OracleEx
@@ -10,7 +11,7 @@ import string
 import sys
 
 def CheckForErrors(cursor, objectOwner, objectName, objectType, errorFragment,
-        baseLineNo = 0):
+        baseLineNo = 0, logPrefix = ""):
     """Check the object for errors, and if any exist, print them."""
     cursor.execute(None,
             owner = objectOwner,
@@ -18,11 +19,10 @@ def CheckForErrors(cursor, objectOwner, objectName, objectType, errorFragment,
             type = objectType)
     errors = cursor.fetchall()
     if errors:
-        print >> sys.stderr, "***** ERROR *****"
+        cx_Logging.Error("%s***** ERROR *****", logPrefix)
         for line, position, text in errors:
-            print >> sys.stderr, str(int(line + baseLineNo)) + "/" + \
-                    str(int(position)) + "\t" + text
-        sys.stderr.flush()
+            cx_Logging.Error("%s%s/%s\t%s", logPrefix, int(line + baseLineNo),
+                    int(position), text)
         message = "%s %s %s compilation errors." % \
                 (objectType.capitalize(), objectName.upper(), errorFragment)
         raise message
@@ -33,6 +33,7 @@ def Connect(connectString, rolesToEnable = None):
     if rolesToEnable is not None:
         cursor = connection.cursor()
         cursor.callproc("dbms_session.set_role", (rolesToEnable,))
+    connection.trimMessage = False
     return connection
 
 
@@ -60,7 +61,7 @@ def GetConstantRepr(value):
     """Return the value represented as an Oracle constant."""
     if value is None:
         return "null"
-    elif isinstance(value, (int, float)):
+    elif isinstance(value, (int, long, float)):
         return str(value)
     elif isinstance(value, basestring):
         parts = []
@@ -143,19 +144,17 @@ def PrepareErrorsCursor(connection, viewPrefix):
     return cursor
 
 
-def RecompileInvalidObjects(connection, includeSchemas, excludeSchemas,
-        password, raiseError):
+def RecompileInvalidObjects(connection, includeSchemas, excludeSchemas = [],
+        raiseError = True, logPrefix = "", connectAsOwner = False):
     """Recompile all invalid objects in the schemas requested."""
 
     # determine whether or not to use dba views or not
     if len(includeSchemas) == 1 and not excludeSchemas \
             and connection.username.upper() == includeSchemas[0]:
-        prevOwner = includeSchemas[0]
+        singleSchema = True
         viewPrefix = "all"
-        compileConnection = connection
-        compileCursor = connection.cursor()
     else:
-        prevOwner = None
+        singleSchema = False
         viewPrefix = "dba"
 
     # prepare a cursor to determine if object is still invalid
@@ -176,6 +175,7 @@ def RecompileInvalidObjects(connection, includeSchemas, excludeSchemas,
     # fetch all of the invalid objects
     numErrors = 0
     numCompiled = 0
+    compileCursor = connection.cursor()
     cursor = connection.cursor()
     cursor.arraysize = 25
     cursor.execute("""
@@ -204,26 +204,26 @@ def RecompileInvalidObjects(connection, includeSchemas, excludeSchemas,
         if not invalid:
             continue
 
-        # switch schemas, if applicable
-        if owner != prevOwner:
-            prevOwner = owner
-            print >> sys.stderr, "Connecting to", owner
-            sys.stderr.flush()
-            compileConnection = cx_OracleEx.Connection(owner, password,
-                    connection.dsn)
-            compileCursor = compileConnection.cursor()
-
         # perform compile
         numCompiled += 1
-        print >> sys.stderr, "  Compiling", name.lower(), "(" + type + ")..."
-        sys.stderr.flush()
+        if singleSchema:
+            compileName = name
+        else:
+            compileName = "%s.%s" % (owner, name)
+        cx_Logging.Trace("%sCompiling %s (%s)...", logPrefix, compileName,
+                type)
         parts = type.lower().split()
-        statement = "alter " + parts[0] + " " + name.lower() + " compile"
+        statement = "alter " + parts[0] + " " + compileName + " compile"
         if len(parts) > 1:
             statement += " " + parts[1]
+        if connectAsOwner and connection.username.upper() != owner:
+            connection = cx_OracleEx.Connection(owner, connection.password,
+                    connection.dsn)
+            compileCursor = connection.cursor()
         compileCursor.execute(statement)
         try:
-            CheckForErrors(errorsCursor, owner, name, type, "has")
+            CheckForErrors(errorsCursor, owner, name, type, "has",
+                    logPrefix = logPrefix)
         except:
             if raiseError:
                 raise
@@ -231,12 +231,12 @@ def RecompileInvalidObjects(connection, includeSchemas, excludeSchemas,
 
     # all done
     if numErrors:
-        print >> sys.stderr, "All objects compiled:", numErrors, "error(s)."
+        cx_Logging.Trace("%sAll objects compiled: %s error(s).", logPrefix,
+                numErrors)
     elif numCompiled:
-        print >> sys.stderr, "All objects compiled successfully."
+        cx_Logging.Trace("%sAll objects compiled successfully.", logPrefix)
     else:
-        print >> sys.stderr, "No invalid objects to compile."
-    sys.stderr.flush()
+        cx_Logging.Trace("%sNo invalid objects to compile.", logPrefix)
 
 
 def SchemaOption(name = "schema"):

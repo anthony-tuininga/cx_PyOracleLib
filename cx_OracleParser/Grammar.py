@@ -204,7 +204,8 @@ GRAMMAR = """
   function_expression := qualified_identifier, WS*,
       (LPAREN, WS*, expression_list?, WS*, RPAREN)+, (PERIOD, identifier)*
   case_clause := KW_when, WS+, expression, WS+, KW_then, WS+, expression
-  case_expression := KW_case, WS+, case_clause, (WS+, case_clause)*, WS+,
+  case_header := KW_case, (WS+, ?-KW_when, expression)?
+  case_expression := case_header, WS+, case_clause, (WS+, case_clause)*, WS+,
       (KW_else, WS+, expression, WS+)?, KW_end
   paren_expression := LPAREN, WS*, expression, WS*, RPAREN
   exists_expression := KW_exists, WS+, subquery
@@ -294,7 +295,8 @@ GRAMMAR = """
       data_type
   procedure_declaration := procedure_definition, procedure_body?
   function_declaration := function_definition, procedure_body?
-  pragma_declaration := KW_pragma, WS+, identifier
+  pragma_declaration := KW_pragma, WS+, identifier,
+          (LPAREN, WS*, expression_list?, WS*, RPAREN)?
   declaration := (procedure_declaration / function_declaration /
       cursor_definition / subtype_declaration / record_declaration /
       array_declaration / ref_cursor_declaration / pragma_declaration /

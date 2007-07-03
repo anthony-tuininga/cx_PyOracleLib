@@ -21,7 +21,7 @@ class Connection(cx_Oracle.Connection):
 #    TIMESTAMP = cx_Oracle.TIMESTAMP
     Date = cx_Oracle.Date
     Timestamp = cx_Oracle.Timestamp
-    logSql = True
+    trimMessage = logSql = True
 
     def cursor(self):
         cursor = Cursor(self)
@@ -31,9 +31,13 @@ class Connection(cx_Oracle.Connection):
     def ExceptionHandler(self, excType, excValue, excTraceback):
         if excType is None or excValue is None \
                 or not isinstance(excValue, cx_Oracle.DatabaseError):
-            return cx_Exceptions.GetExceptionInfo(excType, excValue,
+            exc = cx_Exceptions.GetExceptionInfo(excType, excValue,
                     excTraceback)
-        return DatabaseException(excType, excValue, excTraceback)
+        else:
+            exc = DatabaseException(excType, excValue, excTraceback,
+                    self.trimMessage)
+        exc.arguments["connection"] = repr(self)
+        return exc
 
     def IsValidOracleName(self, name):
         """Return true if the name is valid for use within Oracle."""
@@ -49,7 +53,8 @@ class Cursor(cx_Oracle.Cursor):
 
     def execute(self, _sql, _args = None, **_kwargs):
         """Wrap the execute so that unhandled exceptions are handled."""
-        _args = _args or _kwargs
+        if _args is None:
+            _args = _kwargs
         try:
             if self.connection.logSql \
                     and cx_Logging.Debug("SQL\n%s", _sql or self.statement):
@@ -79,19 +84,25 @@ class Cursor(cx_Oracle.Cursor):
 
     def executeandfetch(self, _sql, _args = None, **_kwargs):
         """Execute the statement and return the cursor for iterating."""
-        self.execute(_sql, _args or _kwargs)
+        if _args is None:
+            _args = _kwargs
+        self.execute(_sql, _args)
         return self
 
     def executeandfetchall(self, _sql, _args = None, **_kwargs):
         """Execute the statement and return all of the rows from the cursor."""
-        self.execute(_sql, _args or _kwargs)
+        if _args is None:
+            _args = _kwargs
+        self.execute(_sql, _args)
         return self.fetchall()
 
     def executeandfetchone(self, _sql, _args = None, **_kwargs):
         """Execute the statement and return one and only one row. If no rows
            are found, the NoDataFound exception is raised. If too many rows
            are found, the TooManyRows exception is raised."""
-        self.execute(_sql, _args or _kwargs)
+        if _args is None:
+            _args = _kwargs
+        self.execute(_sql, _args)
         rows = self.fetchall()
         if len(rows) == 0:
             raise cx_Exceptions.NoDataFound()
@@ -99,18 +110,34 @@ class Cursor(cx_Oracle.Cursor):
             raise cx_Exceptions.TooManyRows(numRows = len(rows))
         return rows[0]
 
+    def executemany(self, _sql, _args):
+        try:
+            if self.connection.logSql \
+                    and cx_Logging.Debug("SQL\n%s", _sql or self.statement):
+                 _output = ["    %s" % (r,) for r in _args]
+                 cx_Logging.Debug("ROWS (%s):\n%s", len(_output),
+                         "\n".join(_output))
+            return cx_Oracle.Cursor.executemany(self, _sql, _args)
+        except:
+            exc = self.connection.ExceptionHandler(*sys.exc_info())
+            exc.details.append("SQL: %s" % _sql or self.statement)
+            exc.details.append("ROWS (%s):" % len(_args))
+            for row in _args:
+                exc.details.append(str(row))
+            raise exc
+
 
 class DatabaseException(cx_Exceptions.BaseException):
     dbErrorCode = None
 
-    def __init__(self, excType, excValue, excTraceback):
+    def __init__(self, excType, excValue, excTraceback, trimMessage = True):
         cx_Exceptions.BaseException.__init__(self)
         self._FormatException(excType, excValue, excTraceback)
         self.message = str(excValue)
         error, = excValue.args
         if not isinstance(error, str):
             self.dbErrorCode = error.code
-        if self.message.startswith("ORA-"):
+        if trimMessage and self.message.startswith("ORA-"):
             pos = self.message.find("ORA-", 1)
             if pos > 0:
                 self.message = self.message[11:pos].rstrip()

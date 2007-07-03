@@ -9,6 +9,7 @@ import Utils
 
 class Object(object):
     """Base class for describing Oracle objects."""
+    supportsReferencedSynonyms = True
 
     def __init__(self, environment, owner, name, type):
         self.environment = environment
@@ -17,6 +18,13 @@ class Object(object):
         self.name = name
         self.nameForOutput = Utils.NameForOutput(name)
         self.type = type
+
+    def ReferencedSynonyms(self):
+        """Return an iterator for the referencing synonyms for the object."""
+        clause = "where table_owner = :owner and table_name = :name"
+        return ObjectIterator(self.environment, "ReferencedSynonyms",
+                Statements.SYNONYMS, clause, Synonym,
+                owner = self.owner, name = self.name)
 
 
 class ObjectWithComments(Object):
@@ -71,11 +79,9 @@ class ObjectWithPrivileges(Object):
 
         # sort privileges by privilege and grantable
         granteesByPrivilege = {}
-        for grantable, grantee, privilege in self.__RetrievePrivileges():
+        for privilege, grantee, grantable in self.__RetrievePrivileges():
             key = (privilege, grantable)
-            grantees = granteesByPrivilege.get(key)
-            if grantees is None:
-                grantees = granteesByPrivilege[key] = []
+            grantees = granteesByPrivilege.setdefault(key, [])
             grantees.append(grantee)
 
         # create privilege sets
@@ -107,15 +113,15 @@ class ObjectWithPrivileges(Object):
                 tableName = "all_tab_privs_made"
             cursor.prepare("""
                     select distinct
-                      grantable,
+                      lower(privilege),
                       lower(grantee),
-                      lower(privilege)
+                      grantable
                     from %s
-                    where owner = :p_Owner
-                      and table_name = :p_Name""" % tableName)
+                    where owner = :owner
+                      and table_name = :name""" % tableName)
         cursor.execute(None,
-                p_Owner = self.owner,
-                p_Name = self.name)
+                owner = self.owner,
+                name = self.name)
         return cursor.fetchall()
 
     def __UnmergedPrivilegeSets(self):
@@ -123,22 +129,29 @@ class ObjectWithPrivileges(Object):
         privileges = self.__RetrievePrivileges()
         privileges.sort()
         return [(grantable, [privilege], [grantee])
-                for grantable, grantee, privilege in privileges]
+                for privilege, grantee, grantable in privileges]
+
+    def _OutputGrantees(self, outFile, grantees, grantable):
+        """Output grantees and grantable clause as needed."""
+        if grantable == "YES":
+            finalClause = "\nwith grant option;"
+        else:
+            finalClause = ";"
+        if len(grantees) == 1:
+            print >> outFile, "to", grantees[0] + finalClause
+        else:
+            clauses = Utils.ClausesForOutput(grantees, "  ", "  ", ",")
+            print >> outFile, "to"
+            print >> outFile, clauses + finalClause
+        print >> outFile
 
     def ExportPrivileges(self, outFile, mergeGrants):
         """Export privileges for the object to the file as SQL statements."""
-
-        # get array of privilege sets
         if mergeGrants:
-          privilegeSets = self.__MergedPrivilegeSets()
+            privilegeSets = self.__MergedPrivilegeSets()
         else:
-          privilegeSets = self.__UnmergedPrivilegeSets()
-
-        # export these to the file
+            privilegeSets = self.__UnmergedPrivilegeSets()
         for grantable, privileges, grantees in privilegeSets:
-            finalClause = ";"
-            if grantable == "YES":
-                finalClause = "\nwith grant option;"
             if len(privileges) == 1:
                 print >> outFile, "grant", privileges[0]
             else:
@@ -146,17 +159,92 @@ class ObjectWithPrivileges(Object):
                 print >> outFile, "grant"
                 print >> outFile, clauses
             print >> outFile, "on", self.nameForOutput
-            if len(grantees) == 1:
-                print >> outFile, "to", grantees[0] + finalClause
+            self._OutputGrantees(outFile, grantees, grantable)
+
+
+class ObjectWithColumnPrivileges(ObjectWithPrivileges):
+    """Base class for describing objects which have column privileges."""
+
+    def __MergedPrivilegeSets(self):
+        """Return a list of merged privilege sets for export."""
+
+        # sort privileges by privilege, column and grantable
+        granteesByPrivilege = {}
+        for privilege, column, grantee, \
+                grantable in self.__RetrievePrivileges():
+            key = (privilege, column, grantable)
+            grantees = granteesByPrivilege.setdefault(key, [])
+            grantees.append(grantee)
+
+        # create privilege sets
+        keys = granteesByPrivilege.keys()
+        keys.sort()
+        privilegeSets = []
+        for key in keys:
+            foundSet = False
+            privilege, column, grantable = key
+            grantees = granteesByPrivilege[key]
+            grantees.sort()
+            for setGrantable, setPrivilege, setGrantees, \
+                    setColumns in privilegeSets:
+                if grantable == setGrantable and grantees == setGrantees \
+                        and privilege == setPrivilege:
+                    foundSet = True
+                    setColumns.append(column)
+                    break
+            if not foundSet:
+                privilegeSet = (grantable, privilege, grantees, [column])
+                privilegeSets.append(privilegeSet)
+
+        return privilegeSets
+
+    def __RetrievePrivileges(self):
+        """Retrieve the privileges from the database."""
+        cursor, isPrepared = self.environment.Cursor("ColumnPrivileges")
+        if not isPrepared:
+            if self.environment.useDbaViews:
+                tableName = "dba_col_privs"
             else:
-                clauses = Utils.ClausesForOutput(grantees, "  ", "  ", ",")
-                print >> outFile, "to"
-                print >> outFile, clauses + finalClause
-            print >> outFile
+                tableName = "all_col_privs_made"
+            cursor.prepare("""
+                    select distinct
+                      lower(privilege),
+                      lower(column_name),
+                      lower(grantee),
+                      grantable
+                    from %s
+                    where owner = :owner
+                      and table_name = :name""" % tableName)
+        cursor.execute(None,
+                owner = self.owner,
+                name = self.name)
+        return cursor.fetchall()
+
+    def __UnmergedPrivilegeSets(self):
+        """Return a list of unmerged privilege sets for export."""
+        privileges = self.__RetrievePrivileges()
+        privileges.sort()
+        return [(grantable, privilege, [grantee], [column])
+                for privilege, column, grantee, grantable in privileges]
+
+    def ExportPrivileges(self, outFile, mergeGrants):
+        """Export privileges for the object to the file as SQL statements."""
+        super(ObjectWithColumnPrivileges, self).ExportPrivileges(outFile,
+                mergeGrants)
+        if mergeGrants:
+            privilegeSets = self.__MergedPrivilegeSets()
+        else:
+            privilegeSets = self.__UnmergedPrivilegeSets()
+        for grantable, privilege, grantees, columns in privilegeSets:
+            privilegeForOutput = "%s(%s)" % (privilege, ", ".join(columns))
+            print >> outFile, "grant", privilegeForOutput
+            print >> outFile, "on", self.nameForOutput
+            self._OutputGrantees(outFile, grantees, grantable)
 
 
 class UserOrRole(ObjectWithPrivileges):
     """Base class for objects which have system privileges."""
+    supportsReferencedSynonyms = False
 
     def __GetRolePrivileges(self):
         """Retrieve the role privileges from the database."""
@@ -277,6 +365,7 @@ class ObjectWithTriggers(Object):
 
 class Constraint(Object):
     """Class for describing constraints."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         owner, name, self.constraintType, self.tableName, searchCondition, \
@@ -383,6 +472,7 @@ class Constraint(Object):
 
 class Index(ObjectWithStorage):
     """Class for describing indexes."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         owner, name, self.tableName, self.tablespaceName, uniqueness, \
@@ -395,10 +485,12 @@ class Index(ObjectWithStorage):
             self.typeModifier = "UNIQUE"
         elif indexType == "BITMAP":
             self.typeModifier = "BITMAP"
-        self.__RetrieveColumns()
         self.temporary = (temporary == "Y")
         self.partitioned = (partitioned == "YES")
         self.compressed = (compressed == "ENABLED")
+        self.reversed = indexType.endswith("NORMAL/REV")
+        self.functionBased = indexType.startswith("FUNCTION-BASED")
+        self.__RetrieveColumns()
         if self.partitioned:
             self.__RetrievePartitionInfo()
 
@@ -419,19 +511,46 @@ class Index(ObjectWithStorage):
 
     def __RetrieveColumns(self):
         """Retrieve the columns for the index."""
+        expressions = {}
+        if self.functionBased:
+            cursor, isPrepared = self.environment.Cursor("IndexExpressions")
+            if not isPrepared:
+                cursor.prepare("""
+                        select
+                          column_position,
+                          column_expression
+                        from %s_ind_expressions
+                        where index_owner = :owner
+                          and index_name = :name""" % \
+                        self.environment.ViewPrefix())
+            cursor.execute(None,
+                    owner = self.owner,
+                    name = self.name)
+            expressions = dict(cursor)
         cursor, isPrepared = self.environment.Cursor("IndexColumns")
         if not isPrepared:
             cursor.prepare("""
-                    select column_name
+                    select
+                      column_name,
+                      descend
                     from %s_ind_columns
-                    where index_owner = :p_Owner
-                      and index_name = :p_Name
+                    where index_owner = :owner
+                      and index_name = :name
                     order by column_position""" % \
                     self.environment.ViewPrefix())
         cursor.execute(None,
-                p_Owner = self.owner,
-                p_Name = self.name)
-        self.columns = [Utils.NameForOutput(c) for c, in cursor.fetchall()]
+                owner = self.owner,
+                name = self.name)
+        self.columns = []
+        for name, descending in cursor:
+            expression = expressions.get(cursor.rowcount)
+            if expression is not None:
+                nameForOutput = expression
+            else:
+                nameForOutput = Utils.NameForOutput(name)
+            if descending == "DESC":
+                nameForOutput += " desc"
+            self.columns.append(nameForOutput)
 
     def __RetrievePartitionInfo(self):
         """Retrieve partition info for the table."""
@@ -484,6 +603,8 @@ class Index(ObjectWithStorage):
         print >> outFile, "on", Utils.NameForOutput(self.tableName), "("
         print >> outFile, "  " + ",\n  ".join(self.columns)
         clauses = []
+        if self.reversed:
+            clauses.append("reverse")
         self.AddStorageClauses(clauses, wantTablespace, wantStorage)
         if self.partitioned:
             self.__AddPartitionClauses(clauses, wantTablespace, wantStorage)
@@ -509,6 +630,7 @@ class Library(Object):
 
 class Lob(ObjectWithStorage):
     """Class for describing LOB segments."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         owner, name, self.tableName, self.segmentName, self.inRow = row
@@ -565,6 +687,7 @@ class Lob(ObjectWithStorage):
 
 class Partition(ObjectWithStorage):
     """Class for describing partitions."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row, partitionKeywords):
         owner, name, self.highValue, self.tablespaceName, self.initialExtent, \
@@ -589,6 +712,7 @@ class Partition(ObjectWithStorage):
 
 class Role(UserOrRole):
     """Class for describing roles."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         name, passwordRequired = row
@@ -688,6 +812,7 @@ class StoredProcWithBody(StoredProcWithPrivileges):
 
 class Synonym(Object):
     """Class for describing synonyms."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         owner, name, self.objectOwner, self.objectName, self.dbLink = row
@@ -711,8 +836,8 @@ class Synonym(Object):
         print >> outFile
 
 
-class Table(ObjectWithStorage, ObjectWithTriggers, ObjectWithPrivileges, \
-        ObjectWithComments):
+class Table(ObjectWithStorage, ObjectWithTriggers, \
+        ObjectWithColumnPrivileges, ObjectWithComments):
     """Class for describing tables."""
 
     def __init__(self, environment, row):
@@ -895,8 +1020,10 @@ class Table(ObjectWithStorage, ObjectWithTriggers, ObjectWithPrivileges, \
                 Statements.CONSTRAINTS, clause, Constraint,
                 p_Owner = self.owner, p_Name = self.name)
 
+
 class Trigger(Object):
     """Class for describing tables."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         owner, name, self.tableName, self.description, self.whenClause, \
@@ -922,6 +1049,7 @@ class Trigger(Object):
 
 class User(UserOrRole):
     """Class for describing users."""
+    supportsReferencedSynonyms = False
 
     def __init__(self, environment, row):
         name, defaultTablespace, temporaryTablespace = row
@@ -958,7 +1086,7 @@ class User(UserOrRole):
         print >> outFile
 
 
-class View(ObjectWithTriggers, ObjectWithPrivileges, ObjectWithComments):
+class View(ObjectWithTriggers, ObjectWithColumnPrivileges, ObjectWithComments):
     """Class for describing views."""
 
     def __init__(self, environment, row):
