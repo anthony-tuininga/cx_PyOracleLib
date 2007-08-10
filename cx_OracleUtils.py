@@ -2,6 +2,7 @@
 
 import datetime
 import getpass
+import cx_Exceptions
 import cx_Logging
 import cx_OptionParser
 import cx_Oracle
@@ -9,6 +10,10 @@ import cx_OracleEx
 import os
 import string
 import sys
+
+class CompilationErrors(cx_Exceptions.BaseException):
+    message = "%(type)s %(name)s %(fragment)s compilation errors."
+
 
 def CheckForErrors(cursor, objectOwner, objectName, objectType, errorFragment,
         baseLineNo = 0, logPrefix = ""):
@@ -23,9 +28,8 @@ def CheckForErrors(cursor, objectOwner, objectName, objectType, errorFragment,
         for line, position, text in errors:
             cx_Logging.Error("%s%s/%s\t%s", logPrefix, int(line + baseLineNo),
                     int(position), text)
-        message = "%s %s %s compilation errors." % \
-                (objectType.capitalize(), objectName.upper(), errorFragment)
-        raise message
+        raise CompilationErrors(type = objectType.capitalize(),
+                name = objectName.upper(), fragment = errorFragment)
 
 def Connect(connectString, rolesToEnable = None):
     """Connect to the database prompting for the password if necessary."""
