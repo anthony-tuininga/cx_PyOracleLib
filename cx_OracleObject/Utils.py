@@ -6,7 +6,7 @@ import Object
 import Statements
 
 __all__ = [ "SOURCE_TYPES", "NameForOutput", "ObjectByType", "ObjectExists",
-            "ObjectType", "OrderObjects" ]
+            "OrderObjects" ]
 
 SOURCE_TYPES = {
     "FUNCTION" : Object.StoredProcWithPrivileges,
@@ -121,22 +121,6 @@ def ObjectExists(environment, owner, name, type):
                 p_Type = type)
     count, = cursor.fetchone()
     return (count > 0)
-
-def ObjectType(environment, owner, name):
-    """Return the type of the object, or None if the object does not exist."""
-    cursor, isPrepared = environment.Cursor()
-    cursor.execute("""
-            select object_type
-            from %s_objects
-            where owner = :p_Owner
-              and object_name = :p_Name
-              and subobject_name is null
-              and instr(object_type, 'BODY') = 0""" % environment.ViewPrefix(),
-            p_Owner = owner,
-            p_Name = name)
-    row = cursor.fetchone()
-    if row is not None:
-        return row[0]
 
 def OrderObjects(objects, dependencies):
     """Put the objects in the order necessary for creation without errors."""
