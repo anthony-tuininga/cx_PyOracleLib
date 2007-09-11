@@ -33,7 +33,19 @@ def CheckForErrors(cursor, objectOwner, objectName, objectType, errorFragment,
 
 def Connect(connectString, rolesToEnable = None):
     """Connect to the database prompting for the password if necessary."""
-    connection = cx_OracleEx.Connection(GetConnectString(connectString))
+    pos = connectString.find(" as sysdba")
+    if pos < 0:
+        pos = connectString.find(" as sysoper")
+        if pos < 0:
+            mode = 0
+        else:
+            mode = cx_Oracle.SYSOPER
+            connectString = connectString[:pos]
+    else:
+        mode = cx_Oracle.SYSDBA
+        connectString = connectString[:pos]
+    connectString = GetConnectString(connectString)
+    connection = cx_OracleEx.Connection(connectString, mode = mode)
     if rolesToEnable is not None:
         cursor = connection.cursor()
         cursor.callproc("dbms_session.set_role", (rolesToEnable,))
