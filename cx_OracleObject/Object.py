@@ -880,6 +880,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
         name, dataType, nullable, precision, scale, length, defaultValue = row
         if dataType == "NUMBER" and precision is None and scale is not None:
             dataType = "integer"
+        elif dataType.startswith("INTERVAL"):
+            precision = None
         clause = Utils.NameForOutput(name).ljust(32) + dataType.lower()
         if precision:
             clause += "(%d" % int(precision)
