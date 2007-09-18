@@ -73,27 +73,38 @@ def QuotedString(value):
     return "'%s'" % value.replace("'", "''")
 
 
-def GetConstantRepr(value):
+def GetConstantRepr(value, binaryData = False):
     """Return the value represented as an Oracle constant."""
     if value is None:
         return "null"
-    elif isinstance(value, (int, long, float)):
+    elif isinstance(value, cx_Oracle.LOB):
+        value = value.read()
+    if isinstance(value, (int, long, float)):
         return str(value)
     elif isinstance(value, basestring):
-        parts = []
-        lastPos = 0
-        for i, char in enumerate(value):
-            if not char.isalnum() and char != " " \
-                    and char not in string.punctuation:
-                temp = value[lastPos:i]
-                lastPos = i + 1
-                if temp:
-                    parts.append(QuotedString(temp))
-                parts.append("chr(%s)" % ord(char))
-        temp = value[lastPos:]
-        if temp:
-            parts.append(QuotedString(temp))
-        return " || ".join(parts)
+        if binaryData:
+            parts = []
+            while value:
+                part = value[:35]
+                value = value[35:]
+                chars = [hex(ord(c))[2:].zfill(2) for c in part]
+                parts.append("'%s'" % "".join(chars))
+            return " ||\n      ".join(parts)
+        else:
+            parts = []
+            lastPos = 0
+            for i, char in enumerate(value):
+                if not char.isalnum() and char != " " \
+                        and char not in string.punctuation:
+                    temp = value[lastPos:i]
+                    lastPos = i + 1
+                    if temp:
+                        parts.append(QuotedString(temp))
+                    parts.append("chr(%s)" % ord(char))
+            temp = value[lastPos:]
+            if temp:
+                parts.append(QuotedString(temp))
+            return " || ".join(parts)
     elif isinstance(value, datetime.datetime):
         return "to_date('%s', 'YYYY-MM-DD HH24:MI:SS')" % \
                 value.strftime("%Y-%m-%d %H:%M:%S")
