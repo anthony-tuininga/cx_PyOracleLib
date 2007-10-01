@@ -1,5 +1,6 @@
 """Defines utility functions."""
 
+import cx_Exceptions
 import sys
 
 import Object
@@ -25,6 +26,10 @@ CONSTRAINT_TYPES = [
     "FOREIGN KEY",
     "CHECK CONSTRAINT"
 ]
+
+class DescribeNotSupported(cx_Exceptions.BaseException):
+    message = "Describing objects of type '%(type)s' is not supported."
+
 
 def ClausesForOutput(clauses, firstString, restString, joinString):
     """Return a list of clauses suitable for output in a SQL statement."""
@@ -86,7 +91,7 @@ def ObjectByType(environment, owner, name, type):
         statement = Statements.CONSTRAINTS
         objectFunction = Object.Constraint
     else:
-        raise "Do not know how to describe objects of type '%s'" % type
+        raise DescribeNotSupported(type = type)
     for object in Object.ObjectIterator(environment, "Default_%s" % type,
             statement, whereClause, objectFunction,
             p_Owner = owner, p_Name = name):
