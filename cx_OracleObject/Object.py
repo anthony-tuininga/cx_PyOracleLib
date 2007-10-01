@@ -1,6 +1,7 @@
 """Defines classes used for describing Oracle objects."""
 
 from __future__ import generators
+import cx_Exceptions
 import cx_OracleUtils
 import sys
 
@@ -398,10 +399,8 @@ class Constraint(Object):
                     "where o.owner = :p_Owner and o.constraint_name = :p_Name",
                     Constraint, p_Owner = refOwner, p_Name = refConstraintName))
                 if not refConstraints:
-                    message = "Cannot fetch information about referenced " + \
-                              "constraint named\n%s.%s. Grant privileges " + \
-                              "or use --use-dba-views."
-                    raise message % (refOwner, refConstraintName)
+                    raise CannotFetchReferencedConstraintInfo(
+                            owner = refOwner, name = refConstraintName)
                 self.refConstraint, = refConstraints
 
     def __FinalClauses(self, wantTablespace, wantStorage):
@@ -1135,4 +1134,9 @@ def PreparedCursor(environment, tag, statement, whereClause):
             cursor.setoutputsize(environment.maxLongSize)
         cursor.prepare(statement)
     return cursor
+
+
+class CannotFetchReferencedConstraintInfo(cx_Exceptions.BaseException):
+    message = "Cannot fetch information about referenced constraint named\n" \
+              "%(owner)s.%(name)s. Grant privileges or use --use-dba-views."
 
