@@ -30,14 +30,19 @@ GRAMMAR = """
   <PLSQL_KW> := '=>'
 
   # keywords
+  KW_access := c"access"
   KW_add := c"add"
   KW_admin := c"admin"
+  KW_administer := c"administer"
   KW_all := c"all"
   KW_alter := c"alter"
+  KW_analyze := c"analyze"
   KW_and := c"and"
   KW_any := c"any"
   KW_as := c"as"
+  KW_audit := c"audit"
   KW_authid := c"authid"
+  KW_backup := c"backup"
   KW_become := c"become"
   KW_begin := c"begin"
   KW_between := c"between"
@@ -49,23 +54,30 @@ GRAMMAR = """
   KW_cast := c"cast"
   KW_check := c"check"
   KW_close := c"close"
+  KW_cluster := c"cluster"
   KW_collect := c"collect"
+  KW_comment := c"comment"
   KW_commit := c"commit"
   KW_connect := c"connect"
   KW_constant := c"constant"
   KW_constraint := c"constraint"
+  KW_context := c"context"
+  KW_cost := c"cost"
   KW_count := c"count"
   KW_create := c"create"
   KW_cross := c"cross"
   KW_current_user := c"current_user"
   KW_cursor := c"cursor"
   KW_database := c"database"
+  KW_debug := c"debug"
   KW_declare := c"declare"
   KW_default := c"default"
   KW_deferred := c"deferred"
   KW_definer := c"definer"
   KW_delete := c"delete"
   KW_dictionary := c"dictionary"
+  KW_dimension := c"dimension"
+  KW_directory := c"directory"
   KW_disable := c"disable"
   KW_distinct := c"distinct"
   KW_drop := c"drop"
@@ -75,11 +87,14 @@ GRAMMAR = """
   KW_escape := c"escape"
   KW_exception := c"exception"
   KW_execute := c"execute"
+  KW_exempt := c"exempt"
   KW_exists := c"exists"
   KW_exit := c"exit"
   KW_fetch := c"fetch"
+  KW_flashback := c"flashback"
   KW_for := c"for"
   KW_forall := c"forall"
+  KW_force := c"force"
   KW_foreign := c"foreign"
   KW_from := c"from"
   KW_function := c"function"
@@ -92,6 +107,7 @@ GRAMMAR = """
   KW_immediate := c"immediate"
   KW_in := c"in"
   KW_index := c"index"
+  KW_indextype := c"indextype"
   KW_initially := c"initially"
   KW_insert := c"insert"
   KW_instead := c"instead"
@@ -105,7 +121,10 @@ GRAMMAR = """
   KW_like := c"like"
   KW_link := c"link"
   KW_lob := c"lob"
+  KW_lock := c"lock"
   KW_loop := c"loop"
+  KW_manage := c"manage"
+  KW_materialized := c"materialized"
   KW_minus := c"minus"
   KW_mod := c"mod"
   KW_nocopy := c"nocopy"
@@ -115,14 +134,17 @@ GRAMMAR = """
   KW_of := c"of"
   KW_on := c"on"
   KW_open := c"open"
+  KW_operator := c"operator"
   KW_option := c"option"
   KW_or := c"or"
   KW_order := c"order"
   KW_out := c"out"
   KW_outer := c"outer"
+  KW_outline := c"outline"
   KW_package := c"package"
   KW_pipe := c"pipe"
   KW_pipelined := c"pipelined"
+  KW_policy := c"policy"
   KW_preserve := c"preserve"
   KW_pragma := c"pragma"
   KW_primary := c"primary"
@@ -132,19 +154,27 @@ GRAMMAR = """
   KW_procedure := c"procedure"
   KW_profile := c"profile"
   KW_public := c"public"
+  KW_query := c"query"
   KW_raise := c"raise"
+  KW_read := c"read"
   KW_record := c"record"
   KW_ref := c"ref"
   KW_references := c"references"
+  KW_refresh := c"refresh"
   KW_replace := c"replace"
+  KW_resource := c"resource"
+  KW_restricted := c"restricted"
+  KW_resumable := c"resumable"
   KW_return := c"return"
   KW_returning := c"returning"
   KW_reverse := c"reverse"
   KW_revoke := c"revoke"
+  KW_rewrite := c"rewrite"
   KW_role := c"role"
   KW_rollback := c"rollback"
   KW_row := c"row"
   KW_rows := c"rows"
+  KW_segment := c"segment"
   KW_select := c"select"
   KW_sequence := c"sequence"
   KW_session := c"session"
@@ -155,14 +185,18 @@ GRAMMAR = """
   KW_store := c"store"
   KW_subtype := c"subtype"
   KW_synonym := c"synonym"
+  KW_sysdba := c"sysdba"
+  KW_sysoper := c"sysoper"
   KW_system := c"system"
   KW_table := c"table"
   KW_tablespace := c"tablespace"
   KW_temporary := c"temporary"
   KW_then := c"then"
   KW_to := c"to"
+  KW_transaction := c"transaction"
   KW_trigger := c"trigger"
   KW_type := c"type"
+  KW_under := c"under"
   KW_union := c"union"
   KW_unique := c"unique"
   KW_unlimited := c"unlimited"
@@ -175,6 +209,7 @@ GRAMMAR = """
   KW_where := c"where"
   KW_while := c"while"
   KW_with := c"with"
+  KW_write := c"write"
 
   # comments
   dash_comment := DASHES, -CR+, CR
@@ -391,47 +426,134 @@ GRAMMAR = """
 
   # privilege manipulation statements
   privilege :=
+     (KW_administer, WS+, KW_database, WS+, KW_trigger) /
+     (KW_analyze, WS+, KW_any) /
+     (KW_alter, WS+, KW_any, WS+, KW_cluster) /
+     (KW_alter, WS+, KW_any, WS+, KW_dimension) /
      (KW_alter, WS+, KW_any, WS+, KW_index) /
+     (KW_alter, WS+, KW_any, WS+, KW_indextype) /
+     (KW_alter, WS+, KW_any, WS+, KW_materialized, WS+, KW_view) /
+     (KW_alter, WS+, KW_any, WS+, KW_outline) /
+     (KW_alter, WS+, KW_any, WS+, KW_procedure) /
+     (KW_alter, WS+, KW_any, WS+, KW_role) /
+     (KW_alter, WS+, KW_any, WS+, KW_sequence) /
      (KW_alter, WS+, KW_any, WS+, KW_table) /
+     (KW_alter, WS+, KW_any, WS+, KW_trigger) /
+     (KW_alter, WS+, KW_any, WS+, KW_type) /
      (KW_alter, WS+, KW_database) /
+     (KW_alter, WS+, KW_profile) /
+     (KW_alter, WS+, KW_resource, WS+, KW_cost) /
+     (KW_alter, WS+, KW_rollback, WS+, KW_segment) /
+     (KW_alter, WS+, KW_session) /
      (KW_alter, WS+, KW_system) /
      (KW_alter, WS+, KW_tablespace) /
      (KW_alter, WS+, KW_user) /
+     (KW_audit, WS+, KW_any) /
+     (KW_audit, WS+, KW_system) /
+     (KW_backup, WS+, KW_any, WS+, KW_table) /
      (KW_become, WS+, KW_user) /
+     (KW_comment, WS+, KW_any, WS+, KW_table) /
+     (KW_create, WS+, KW_any, WS+, KW_cluster) /
+     (KW_create, WS+, KW_any, WS+, KW_context) /
+     (KW_create, WS+, KW_any, WS+, KW_dimension) /
+     (KW_create, WS+, KW_any, WS+, KW_directory) /
+     (KW_create, WS+, KW_any, WS+, KW_index) /
+     (KW_create, WS+, KW_any, WS+, KW_indextype) /
+     (KW_create, WS+, KW_any, WS+, KW_library) /
+     (KW_create, WS+, KW_any, WS+, KW_materialized, WS+, KW_view) /
+     (KW_create, WS+, KW_any, WS+, KW_operator) /
+     (KW_create, WS+, KW_any, WS+, KW_outline) /
+     (KW_create, WS+, KW_any, WS+, KW_procedure) /
+     (KW_create, WS+, KW_any, WS+, KW_sequence) /
+     (KW_create, WS+, KW_any, WS+, KW_synonym) /
+     (KW_create, WS+, KW_any, WS+, KW_table) /
+     (KW_create, WS+, KW_any, WS+, KW_trigger) /
+     (KW_create, WS+, KW_any, WS+, KW_type) /
      (KW_create, WS+, KW_any, WS+, KW_view) /
+     (KW_create, WS+, KW_cluster) /
      (KW_create, WS+, KW_database, WS+, KW_link) /
+     (KW_create, WS+, KW_dimension) /
+     (KW_create, WS+, KW_indextype) /
      (KW_create, WS+, KW_library) /
+     (KW_create, WS+, KW_materialized, WS+, KW_view) /
+     (KW_create, WS+, KW_operator) /
      (KW_create, WS+, KW_procedure) /
      (KW_create, WS+, KW_profile) /
+     (KW_create, WS+, KW_public, WS+, KW_database, WS+, KW_link) /
      (KW_create, WS+, KW_public, WS+, KW_synonym) /
      (KW_create, WS+, KW_role) /
+     (KW_create, WS+, KW_rollback, WS+, KW_segment) /
      (KW_create, WS+, KW_sequence) /
      (KW_create, WS+, KW_session) /
      (KW_create, WS+, KW_snapshot) /
      (KW_create, WS+, KW_synonym) /
-     (KW_create, WS+, KW_tablespace) /
      (KW_create, WS+, KW_table) /
+     (KW_create, WS+, KW_tablespace) /
      (KW_create, WS+, KW_trigger) /
      (KW_create, WS+, KW_type) /
      (KW_create, WS+, KW_user) /
      (KW_create, WS+, KW_view) /
+     (KW_debug, WS+, KW_any, WS+, KW_procedure) /
+     (KW_debug, WS+, KW_connect, WS+, KW_session) /
      (KW_delete, WS+, KW_any, WS+, KW_table) /
+     (KW_drop, WS+, KW_any, WS+, KW_cluster) /
+     (KW_drop, WS+, KW_any, WS+, KW_context) /
+     (KW_drop, WS+, KW_any, WS+, KW_dimension) /
+     (KW_drop, WS+, KW_any, WS+, KW_directory) /
+     (KW_drop, WS+, KW_any, WS+, KW_index) /
+     (KW_drop, WS+, KW_any, WS+, KW_indextype) /
+     (KW_drop, WS+, KW_any, WS+, KW_library) /
+     (KW_drop, WS+, KW_any, WS+, KW_materialized, WS+, KW_view) /
+     (KW_drop, WS+, KW_any, WS+, KW_operator) /
+     (KW_drop, WS+, KW_any, WS+, KW_outline) /
+     (KW_drop, WS+, KW_any, WS+, KW_procedure) /
+     (KW_drop, WS+, KW_any, WS+, KW_role) /
+     (KW_drop, WS+, KW_any, WS+, KW_sequence) /
+     (KW_drop, WS+, KW_any, WS+, KW_synonym) /
+     (KW_drop, WS+, KW_any, WS+, KW_table) /
+     (KW_drop, WS+, KW_any, WS+, KW_trigger) /
+     (KW_drop, WS+, KW_any, WS+, KW_type) /
+     (KW_drop, WS+, KW_any, WS+, KW_view) /
+     (KW_drop, WS+, KW_public, WS+, KW_database, WS+, KW_link) /
      (KW_drop, WS+, KW_public, WS+, KW_synonym) /
+     (KW_drop, WS+, KW_profile) /
+     (KW_drop, WS+, KW_rollback, WS+, KW_segment) /
      (KW_drop, WS+, KW_tablespace) /
      (KW_drop, WS+, KW_user) /
+     (KW_execute, WS+, KW_any, WS+, KW_indextype) /
+     (KW_execute, WS+, KW_any, WS+, KW_operator) /
      (KW_execute, WS+, KW_any, WS+, KW_procedure) /
+     (KW_execute, WS+, KW_any, WS+, KW_type) /
+     (KW_exempt, WS+, KW_access, WS+, KW_policy) /
+     (KW_flashback, WS+, KW_any, WS+, KW_table) /
+     (KW_force, WS+, KW_any, WS+, KW_transaction) /
+     (KW_force, WS+, KW_transaction) /
      (KW_grant, WS+, KW_any, WS+, KW_object, WS+, KW_privileges) /
      (KW_grant, WS+, KW_any, WS+, KW_object, WS+, KW_privilege) /
      (KW_grant, WS+, KW_any, WS+, KW_privilege) /
      (KW_grant, WS+, KW_any, WS+, KW_role) /
      (KW_insert, WS+, KW_any, WS+, KW_table) /
+     (KW_lock, WS+, KW_any, WS+, KW_table) /
+     (KW_manage, WS+, KW_tablespace) /
+     (KW_query, WS+, KW_rewrite) /
+     (KW_global, WS+, KW_query, WS+, KW_rewrite) /
+     (KW_on, WS+, KW_commit, WS+, KW_refresh) /
+     (KW_restricted, WS+, KW_session) /
+     KW_resumable /
      (KW_select, WS+, KW_any, WS+, KW_dictionary) /
      (KW_select, WS+, KW_any, WS+, KW_sequence) /
      (KW_select, WS+, KW_any, WS+, KW_table) /
+     KW_sysdba /
+     KW_sysoper /
      (KW_unlimited, WS+, KW_tablespace) /
+     (KW_under, WS+, KW_any, WS+, KW_type) /
+     (KW_under, WS+, KW_any, WS+, KW_view) /
      (KW_update, WS+, KW_any, WS+, KW_table) /
      KW_select / KW_insert / KW_update / KW_delete /
-     KW_execute / KW_alter / KW_all / KW_references / identifier
+     KW_all / KW_alter / KW_debug / KW_execute / KW_flashback / KW_index /
+     (KW_on, WS+, KW_commit, WS+, KW_refresh) /
+     (KW_query, WS+, KW_rewrite) / KW_read / KW_references / KW_under /
+     KW_write / identifier
   privilege_list := privilege, (WS*, COMMA, WS*, privilege)*
   grant_statement := KW_grant, WS+, privilege_list, WS+,
       (KW_on, WS+, identifier, WS+)?, KW_to, WS+, identifier_list,
