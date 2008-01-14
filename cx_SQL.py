@@ -285,7 +285,8 @@ class DDLStatement(Statement):
   # FindTablespace()
   #   Find the tablespace keyword in the SQL and return the index into the
   # string and tablespace name which follows the keyword. If the keyword cannot
-  # be located, -1 and an empty string is returned.
+  # be located, -1 and an empty string is returned. NOTE: this routine assumes
+  # that the statement delimiter has already been stripped from the SQL.
   #----------------------------------------------------------------------------
   def FindTablespace(self, a_SQL):
     v_Pos = 0
