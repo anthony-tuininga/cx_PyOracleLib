@@ -622,7 +622,11 @@ class UpdateStatement(DMLStatement):
     self.i_LineNo = a_LineNo
     self.i_Terminator = ";"
     self.i_Action = "updated"
-    self.i_ObjectName = a_Line.lower().split()[1]
+    parts = a_Line.lower().split()
+    if len(parts) > 1:
+        self.i_ObjectName = parts[1]
+    else:
+        self.i_ObjectName = "unknown table"
 
 #------------------------------------------------------------------------------
 # DeleteStatement
