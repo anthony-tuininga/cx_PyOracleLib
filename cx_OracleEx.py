@@ -39,6 +39,13 @@ class Connection(cx_Oracle.Connection):
         exc.arguments["connection"] = repr(self)
         return exc
 
+    def GetCurrentDate(self):
+        """Return the current date according to the database."""
+        cursor = self.cursor()
+        cursor.execute("select sysdate from dual")
+        value, = cursor.fetchone()
+        return value
+
     def IsValidOracleName(self, name):
         """Return true if the name is valid for use within Oracle."""
         cursor = cx_Oracle.Cursor(self)
