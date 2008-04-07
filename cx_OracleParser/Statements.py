@@ -114,13 +114,19 @@ class ForeignKey(Constraint):
 class Grant(object):
     """Class for grants."""
 
-    def __init__(self, sql, privileges, grantees):
+    def __init__(self, sql, privileges, grantees, objectOwner = None,
+            objectName = None):
         self.sql = sql
         self.privileges = privileges
         self.grantees = grantees
+        self.objectOwner = objectOwner
+        self.objectName = objectName
 
     def __repr__(self):
-        return "<%s>" % self.__class__.__name__
+        if self.objectOwner is None:
+            return "<%s>" % self.__class__.__name__
+        return "<%s on %s.%s>" % \
+                (self.__class__.__name__, self.objectOwner, self.objectName)
 
 
 class Index(Statement):
@@ -174,13 +180,19 @@ class PublicSynonym(SynonymBase):
 class Revoke(object):
     """Class for revokes."""
 
-    def __init__(self, sql, privileges, grantees):
+    def __init__(self, sql, privileges, grantees, objectOwner = None,
+            objectName = None):
         self.sql = sql
         self.privileges = privileges
         self.grantees = grantees
+        self.objectOwner = objectOwner
+        self.objectName = objectName
 
     def __repr__(self):
-        return "<%s>" % self.__class__.__name__
+        if self.objectOwner is None:
+            return "<%s>" % self.__class__.__name__
+        return "<%s on %s.%s>" % \
+                (self.__class__.__name__, self.objectOwner, self.objectName)
 
 
 class Role(Statement):

@@ -243,12 +243,16 @@ class Processor(cx_Parser.DispatchProcessor):
             grantees = items[3][1]
             return Statements.Grant(sql[start:end], privileges, grantees)
         else:
-            childTag, objectName = items[3]
-            refObj = self.__directory.get((self.owner, objectName))
-            if refObj is None:
-                raise "Grant statement for %s.%s without definition." % \
-                        (self.owner, objectName)
-            refObj.sql += "\n\n" + sql[start:end]
+            privileges = items[1][1]
+            objectTuple = items[3][1]
+            grantees = items[5][1]
+            if len(objectTuple) == 1:
+                objectOwner = self.owner
+                objectName, = objectTuple
+            else:
+                objectOwner, objectName = objectTuple
+            return Statements.Grant(sql[start:end], privileges, grantees,
+                    objectOwner, objectName)
 
     def identifier_list(self, sql, tag, start, end, children):
         return tag, [v for t, v in self.DispatchList(sql, children)]
@@ -305,12 +309,16 @@ class Processor(cx_Parser.DispatchProcessor):
             grantees = items[3][1]
             return Statements.Revoke(sql[start:end], privileges, grantees)
         else:
-            childTag, objectName = items[3]
-            refObj = self.__directory.get((self.owner, objectName))
-            if refObj is None:
-                raise "Revoke statement for %s.%s without definition." % \
-                        (self.owner, objectName)
-            refObj.sql += "\n\n" + sql[start:end]
+            privileges = items[1][1]
+            objectTuple = items[3][1]
+            grantees = items[5][1]
+            if len(objectTuple) == 1:
+                objectOwner = self.owner
+                objectName, = objectTuple
+            else:
+                objectOwner, objectName = objectTuple
+            return Statements.Revoke(sql[start:end], privileges, grantees,
+                    objectOwner, objectName)
 
     def select_into_statement(self, sql, tag, start, end, children):
         self.select_statement(sql, tag, start, end, children)
