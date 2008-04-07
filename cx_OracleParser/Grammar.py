@@ -556,11 +556,11 @@ GRAMMAR = """
      KW_write / identifier
   privilege_list := privilege, (WS*, COMMA, WS*, privilege)*
   grant_statement := KW_grant, WS+, privilege_list, WS+,
-      (KW_on, WS+, identifier, WS+)?, KW_to, WS+, identifier_list,
+      (KW_on, WS+, qualified_identifier, WS+)?, KW_to, WS+, identifier_list,
       (WS*, KW_with, WS+, (KW_grant / KW_admin), WS+, KW_option, WS*)?,
       simple_statement_ender
   revoke_statement := KW_revoke, WS+, privilege_list, WS+,
-      (KW_on, WS+, identifier, WS+)?, KW_from, WS+, identifier_list,
+      (KW_on, WS+, qualified_identifier, WS+)?, KW_from, WS+, identifier_list,
       simple_statement_ender
 
   # DDL statements
