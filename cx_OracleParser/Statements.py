@@ -27,8 +27,6 @@ class Statement(object):
                     (self.__class__.__name__, self.owner, self.name)
         return "<%s>" % self.__class__.__name__
 
-    __str__ = __repr__
-
 
 class Constraint(Statement):
     """Base class for all constraints."""
@@ -124,8 +122,6 @@ class Grant(object):
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
 
-    __str__ = __repr__
-
 
 class Index(Statement):
     """Class for indexes."""
@@ -186,8 +182,6 @@ class Revoke(object):
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
 
-    __str__ = __repr__
-
 
 class Role(Statement):
     """Class for roles."""
@@ -197,8 +191,6 @@ class Role(Statement):
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__, self.name)
-
-    __str__ = __repr__
 
     def DependsOn(self):
         return []
@@ -272,8 +264,6 @@ class User(Statement):
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__, self.name)
-
-    __str__ = __repr__
 
     def DependsOn(self):
         return []
