@@ -623,9 +623,11 @@ GRAMMAR = """
   create_type_statement := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?,
       KW_type, WS+, identifier, WS+, KW_as, WS+, (type_object / type_list),
       complex_statement_ender
+  triggering_op := KW_insert / KW_update / KW_delete
+  triggering_op_list := triggering_op, (WS+, KW_or, WS+, triggering_op)*
   create_trigger_statement := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?,
       KW_trigger, WS+, identifier, WS+, KW_instead, WS+, KW_of, WS+,
-      (KW_insert / KW_update / KW_delete), WS+, KW_on, WS+, identifier, WS+,
+      triggering_op_list, WS+, KW_on, WS+, identifier, WS+,
       compound_statement, complex_statement_ender
   default_tablespace_clause := KW_default, WS+, KW_tablespace, WS+, identifier
   temp_tablespace_clause := KW_temporary, WS+, KW_tablespace, WS+, identifier
