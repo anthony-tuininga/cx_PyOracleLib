@@ -28,6 +28,14 @@ class Connection(cx_Oracle.Connection):
         cursor.arraysize = 50
         return cursor
 
+    def DeleteRow(self, tableName, **args):
+        """Delete a row from a table."""
+        whereClauses = ["%s = :%s" % (n, n) for n in args]
+        statement = "delete from %s where %s" % \
+                (tableName, " and ".join(whereClauses))
+        cursor = self.cursor()
+        cursor.execute(statement, **args)
+
     def ExceptionHandler(self, excType, excValue, excTraceback):
         if excType is None or excValue is None \
                 or not isinstance(excValue, cx_Oracle.DatabaseError):
@@ -46,6 +54,15 @@ class Connection(cx_Oracle.Connection):
         value, = cursor.fetchone()
         return value
 
+    def InsertRow(self, tableName, **args):
+        """Insert a row into the table."""
+        names = args.keys()
+        bindNames = [":%s" % n for n in names]
+        statement = "insert into %s (%s) values (%s)" % \
+                (tableName, ",".join(names), ",".join(bindNames))
+        cursor = self.cursor()
+        cursor.execute(statement, **args)
+
     def IsValidOracleName(self, name):
         """Return true if the name is valid for use within Oracle."""
         cursor = cx_Oracle.Cursor(self)
@@ -54,6 +71,16 @@ class Connection(cx_Oracle.Connection):
             return True
         except:
             return False
+
+    def UpdateRow(self, tableName, *whereNames, **args):
+        """Update a row in the table."""
+        setClauses = ["%s = :%s" % (n, n) for n in args \
+                if n not in whereNames]
+        whereClauses = ["%s = :%s" % (n, n) for n in whereNames]
+        statement = "update %s set %s where %s" % \
+                (tableName, ",".join(setClauses), " and ".join(whereClauses))
+        cursor = self.cursor()
+        cursor.execute(statement, **args)
 
 
 class Cursor(cx_Oracle.Cursor):
