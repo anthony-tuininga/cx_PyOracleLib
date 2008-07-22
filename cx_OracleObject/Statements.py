@@ -18,6 +18,16 @@ CONSTRAINTS = """
         order by decode(o.constraint_type, 'P', 1, 'U', 2, 'R', 3, 'C', 4),
             o.owner, o.constraint_name"""
 
+CONTEXTS = """
+        select
+          namespace,
+          schema,
+          package,
+          type
+        from dba_context o
+        %(p_WhereClause)s
+        order by namespace"""
+
 INDEXES_ANY = """
         select
           o.owner,

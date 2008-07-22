@@ -15,9 +15,9 @@ class Object(object):
     def __init__(self, environment, owner, name, type):
         self.environment = environment
         self.owner = owner
-        self.ownerForOutput = Utils.NameForOutput(owner)
+        self.ownerForOutput = environment.NameForOutput(owner)
         self.name = name
-        self.nameForOutput = Utils.NameForOutput(name)
+        self.nameForOutput = environment.NameForOutput(name)
         self.type = type
 
     def ReferencedSynonyms(self):
@@ -66,7 +66,7 @@ class ObjectWithComments(Object):
                 name = self.name)
         for name, comments in cursor:
             nameForOutput = "%s.%s" % \
-                    (self.nameForOutput, Utils.NameForOutput(name))
+                    (self.nameForOutput, self.environment.NameForOutput(name))
             print >> outFile, "comment on column", nameForOutput, "is",
             print >> outFile, "%s;" % cx_OracleUtils.QuotedString(comments)
             print >> outFile
@@ -364,6 +364,27 @@ class ObjectWithTriggers(Object):
                 Trigger, p_Owner = self.owner, p_Name = self.name)
 
 
+class Context(Object):
+    """Class for describing contexts."""
+
+    def __init__(self, environment, row):
+        name, self.packageOwner, self.packageName, self.contextType = row
+        Object.__init__(self, environment, "SYSTEM", name, "CONTEXT")
+
+    def Export(self, outFile):
+        """Export the object as a SQL statement."""
+        packageName = "%s.%s" % \
+                (self.environment.NameForOutput(self.packageOwner),
+                 self.environment.NameForOutput(self.packageName))
+        print >> outFile, "create or replace context", self.nameForOutput
+        if self.contextType == "ACCESSED LOCALLY":
+            print >> outFile, "using", packageName + ";"
+        else:
+            print >> outFile, "using", packageName
+            print >> outFile, self.contextType.lower() + ";"
+        print >> outFile
+
+
 class Constraint(Object):
     """Class for describing constraints."""
     supportsReferencedSynonyms = False
@@ -431,11 +452,12 @@ class Constraint(Object):
         cursor.execute(None,
                 p_Owner = self.owner,
                 p_Name = self.name)
-        self.columns = [Utils.NameForOutput(c) for c, in cursor.fetchall()]
+        self.columns = [self.environment.NameForOutput(c) for c, in cursor]
 
     def Export(self, outFile, wantTablespace, wantStorage):
         """Export the object as a SQL statement."""
-        print >> outFile, "alter table", Utils.NameForOutput(self.tableName)
+        nameForOutput = self.environment.NameForOutput(self.tableName)
+        print >> outFile, "alter table", nameForOutput
         print >> outFile, "add constraint %s" % self.nameForOutput
         finalClauses = self.__FinalClauses(wantTablespace, wantStorage)
         if self.constraintType == "C":
@@ -454,7 +476,8 @@ class Constraint(Object):
             clauses = Utils.ClausesForOutput(self.columns, "  ", "  ", ",")
             print >> outFile, "foreign key ("
             print >> outFile, clauses
-            refName = Utils.NameForOutput(self.refConstraint.tableName)
+            tableName = self.refConstraint.tableName
+            refName = self.environment.NameForOutput(tableName)
             if self.refConstraint.owner != self.owner:
                 refName = "%s.%s" % \
                         (self.refConstraint.ownerForOutput, refName)
@@ -546,7 +569,7 @@ class Index(ObjectWithStorage):
             if expression is not None:
                 nameForOutput = expression
             else:
-                nameForOutput = Utils.NameForOutput(name)
+                nameForOutput = self.environment.NameForOutput(name)
             if descending == "DESC":
                 nameForOutput += " desc"
             self.columns.append(nameForOutput)
@@ -599,7 +622,8 @@ class Index(ObjectWithStorage):
         if self.typeModifier:
             print >> outFile, self.typeModifier.lower(),
         print >> outFile, self.type.lower(), self.nameForOutput
-        print >> outFile, "on", Utils.NameForOutput(self.tableName), "("
+        tableName = self.environment.NameForOutput(self.tableName)
+        print >> outFile, "on", tableName, "("
         print >> outFile, "  " + ",\n  ".join(self.columns)
         clauses = []
         if self.reversed:
@@ -824,9 +848,10 @@ class Synonym(Object):
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
-        name = Utils.NameForOutput(self.objectName)
+        name = self.environment.NameForOutput(self.objectName)
         if self.objectOwner:
-            name = "%s.%s" % (Utils.NameForOutput(self.objectOwner), name)
+            owner = self.environment.NameForOutput(self.objectOwner)
+            name = "%s.%s" % (owner, name)
         if self.dbLink:
             name += "@%s" % self.dbLink.lower()
         print >> outFile, "create", self.type.lower(), self.nameForOutput,
@@ -868,7 +893,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
             if clauses:
                 clauses[-1] += ","
             partition.AddClauses(clauses, wantTablespace, wantStorage)
-        columns = [Utils.NameForOutput(n) for n in self.partitionColumns]
+        columns = [self.environment.NameForOutput(n) \
+                for n in self.partitionColumns]
         clauses.insert(0, "partition by %s (%s)" % \
                 (self.partitionType.lower(), ", ".join(columns)))
         clauses[1] = "( " + clauses[1].lstrip()
@@ -881,7 +907,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
             dataType = "integer"
         elif dataType.startswith("INTERVAL"):
             precision = None
-        clause = Utils.NameForOutput(name).ljust(32) + dataType.lower()
+        nameForOutput = self.environment.NameForOutput(name)
+        clause = nameForOutput.ljust(32) + dataType.lower()
         if precision:
             clause += "(%d" % int(precision)
             if scale:
@@ -1055,8 +1082,9 @@ class User(UserOrRole):
     def __init__(self, environment, row):
         name, defaultTablespace, temporaryTablespace = row
         Object.__init__(self, environment, "SYSTEM", name, "USER")
-        self.defaultTablespace = Utils.NameForOutput(defaultTablespace)
-        self.temporaryTablespace = Utils.NameForOutput(temporaryTablespace)
+        self.defaultTablespace = environment.NameForOutput(defaultTablespace)
+        self.temporaryTablespace = \
+                environment.NameForOutput(temporaryTablespace)
         self.__RetrieveTablespaceQuotas()
 
     def __RetrieveTablespaceQuotas(self):
@@ -1076,7 +1104,7 @@ class User(UserOrRole):
     def Export(self, outFile):
         """Export the object as a SQL statement."""
         quotaClauses = ["\n  quota %s on %s" % \
-                (Utils.SizeForOutput(s), Utils.NameForOutput(t)) \
+                (Utils.SizeForOutput(s), self.environment.NameForOutput(t)) \
                 for t, s in self.quotas]
         finalClause = "".join(quotaClauses) + ";"
         print >> outFile, "create user", self.nameForOutput,

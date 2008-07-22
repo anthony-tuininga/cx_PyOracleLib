@@ -27,6 +27,7 @@ class Describer(object):
         self.nameOnly = False
         self.includeRoles = False
         self.includeUsers = False
+        self.includeContexts = False
         self.includedObjects = None
         self.onlyIf = None
         self.objectTypes = []
@@ -37,7 +38,10 @@ class Describer(object):
             self.outFile = outFile
         Utils.SetOptions(self, options)
         if not self.schemas:
-            self.schemas = [environment.connection.username.upper()]
+            cursor = environment.connection.cursor()
+            cursor.execute("select user from dual")
+            schema, = cursor.fetchone()
+            self.schemas = [schema]
 
     def __FetchObjectsToInclude(self):
         """Populate the dictionary of objects to include in the export."""
@@ -86,6 +90,8 @@ class Describer(object):
             self.ExportRoles()
         if self.includeUsers:
             self.ExportUsers()
+        if self.includeContexts:
+            self.ExportContexts()
         if self.TypeIncluded("SYNONYM"):
             self.ExportSynonyms()
         if self.TypeIncluded("SEQUENCE"):
@@ -108,6 +114,13 @@ class Describer(object):
         self.ExportObjects(Object.ObjectIterator(self.environment,
                 "AllConstraints", Statements.CONSTRAINTS,
                 "where o.owner %s" % self.schemasClause, Object.Constraint))
+
+    def ExportContexts(self):
+        """Export all of the contexts."""
+        print >> sys.stderr, "Describing contexts..."
+        whereClause = "where o.schema %s" % self.schemasClause
+        self.ExportObjects(Object.ObjectIterator(self.environment, "Contexts",
+                Statements.CONTEXTS, whereClause, Object.Context))
 
     def ExportIndexes(self):
         """Export all of the indexes."""
@@ -242,8 +255,8 @@ class Describer(object):
                 objectType = "%s %s" % (objectOwner, objectType)
             print >> self.outFile, objectName, "(%s)" % objectType
         else:
-            object = Utils.ObjectByType(self.environment, objectOwner,
-                    objectName, objectType)
+            object = self.environment.ObjectByType(objectOwner, objectName,
+                    objectType)
             self.ExportObject(object)
 
     def RetrieveDependencies(self):
@@ -289,12 +302,14 @@ class Describer(object):
             self.currentOwner = objectOwner
             if self.nameOnly:
                 print >> self.outFile
-            print >> self.outFile, "connect", self.currentOwner.lower()
+            nameForOutput = self.environment.NameForOutput(self.currentOwner)
+            print >> self.outFile, "connect", nameForOutput
             print >> self.outFile
 
     def SourceTypes(self):
         """Return the list of source types to be included in the output."""
-        return [t for t in Utils.SOURCE_TYPES if self.TypeIncluded(t)]
+        return [t for t in self.environment.sourceTypes \
+                if self.TypeIncluded(t)]
 
     def SourceTypesClause(self):
         """Return the clause suitable for inclusion in a SQL statement to

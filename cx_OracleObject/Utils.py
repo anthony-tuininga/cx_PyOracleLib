@@ -1,35 +1,11 @@
 """Defines utility functions."""
 
-import cx_Exceptions
 import sys
 
 import Object
 import Statements
 
-__all__ = [ "SOURCE_TYPES", "NameForOutput", "ObjectByType", "ObjectExists",
-            "OrderObjects" ]
-
-SOURCE_TYPES = {
-    "FUNCTION" : Object.StoredProcWithPrivileges,
-    "PACKAGE" : Object.StoredProcWithBody,
-    "PACKAGE BODY" : Object.StoredProc,
-    "PROCEDURE" : Object.StoredProcWithPrivileges,
-    "TYPE" : Object.StoredProcWithBody,
-    "TYPE BODY" : Object.StoredProc,
-    "VIEW" : Object.ViewNoRetrieve
-}
-
-CONSTRAINT_TYPES = [
-    "CONSTRAINT",
-    "PRIMARY KEY",
-    "UNIQUE CONSTRAINT",
-    "FOREIGN KEY",
-    "CHECK CONSTRAINT"
-]
-
-class DescribeNotSupported(cx_Exceptions.BaseException):
-    message = "Describing objects of type '%(type)s' is not supported."
-
+__all__ = [ "OrderObjects" ]
 
 def ClausesForOutput(clauses, firstString, restString, joinString):
     """Return a list of clauses suitable for output in a SQL statement."""
@@ -48,84 +24,6 @@ def DependenciesOfInterest(key, objectsOfInterest, dependencies,
             else:
                 DependenciesOfInterest(refKey, objectsOfInterest, dependencies,
                         dependenciesOfInterest)
-
-def NameForOutput(name):
-    """Return the name suitable for output in a SQL statement."""
-    if name.isupper():
-        return name.lower()
-    else:
-        return '"%s"' % name
-
-def ObjectByType(environment, owner, name, type):
-    """Return an object of the correct type."""
-    if type in SOURCE_TYPES:
-        return SOURCE_TYPES[type](environment, owner, name, type)
-    whereClause = "where o.owner = :p_Owner and "
-    if type == "TABLE":
-        whereClause += "o.table_name = :p_Name"
-        statement = Statements.TABLES
-        objectFunction = Object.Table
-    elif type == "INDEX":
-        whereClause += "o.index_name = :p_Name"
-        statement = Statements.INDEXES
-        objectFunction = Object.Index
-    elif type == "TRIGGER":
-        whereClause += "o.trigger_name = :p_Name"
-        statement = Statements.TRIGGERS
-        objectFunction = Object.Trigger
-    elif type == "SYNONYM":
-        whereClause += "o.synonym_name = :p_Name"
-        statement = Statements.SYNONYMS
-        objectFunction = Object.Synonym
-    elif type == "SEQUENCE":
-        whereClause = "where o.sequence_owner = :p_Owner " + \
-                "and o.sequence_name = :p_Name"
-        statement = Statements.SEQUENCES
-        objectFunction = Object.Sequence
-    elif type == "LIBRARY":
-        whereClause += "o.library_name = :p_Name"
-        statement = Statements.LIBRARIES
-        objectFunction = Object.Library
-    elif type in CONSTRAINT_TYPES:
-        whereClause += "o.constraint_name = :p_Name"
-        statement = Statements.CONSTRAINTS
-        objectFunction = Object.Constraint
-    else:
-        raise DescribeNotSupported(type = type)
-    for object in Object.ObjectIterator(environment, "Default_%s" % type,
-            statement, whereClause, objectFunction,
-            p_Owner = owner, p_Name = name):
-        return object
-
-def ObjectExists(environment, owner, name, type):
-    """Returns a boolean indicating if the object exists."""
-    if type in CONSTRAINT_TYPES:
-        cursor, isPrepared = environment.Cursor("ConstraintExists")
-        if not isPrepared:
-            cursor.prepare("""
-                    select count(*)
-                    from %s_constraints
-                    where owner = :p_Owner
-                      and constraint_name = :p_Name""" % \
-                    environment.ViewPrefix())
-        cursor.execute(None,
-                p_Owner = owner,
-                p_Name = name)
-    else:
-        cursor, isPrepared = environment.Cursor("ObjectExists")
-        if not isPrepared:
-            cursor.prepare("""
-                    select count(*)
-                    from %s_objects
-                    where owner = :p_Owner
-                      and object_name = :p_Name
-                      and object_type = :p_Type""" % environment.ViewPrefix())
-        cursor.execute(None,
-                p_Owner = owner,
-                p_Name = name,
-                p_Type = type)
-    count, = cursor.fetchone()
-    return (count > 0)
 
 def OrderObjects(objects, dependencies):
     """Put the objects in the order necessary for creation without errors."""
