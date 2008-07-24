@@ -829,8 +829,7 @@ class StoredProcWithBody(StoredProcWithPrivileges):
         """Return the body for the package or type, if it exists."""
         type = self.type + " BODY"
         if self.environment.ObjectExists(self.owner, self.name, type):
-            return Utils.ObjectByType(self.environment, self.owner, self.name,
-                    type)
+            return self.environment.ObjectByType(self.owner, self.name, type)
 
 
 class Synonym(Object):
