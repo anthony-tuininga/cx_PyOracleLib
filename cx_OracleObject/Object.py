@@ -828,7 +828,7 @@ class StoredProcWithBody(StoredProcWithPrivileges):
     def Body(self):
         """Return the body for the package or type, if it exists."""
         type = self.type + " BODY"
-        if Utils.ObjectExists(self.environment, self.owner, self.name, type):
+        if self.environment.ObjectExists(self.owner, self.name, type):
             return Utils.ObjectByType(self.environment, self.owner, self.name,
                     type)
 
