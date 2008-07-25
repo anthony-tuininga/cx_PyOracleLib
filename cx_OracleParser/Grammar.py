@@ -84,6 +84,7 @@ GRAMMAR = """
   KW_else := c"else"
   KW_elsif := c"elsif"
   KW_end := c"end"
+  KW_errors := c"errors"
   KW_escape := c"escape"
   KW_exception := c"exception"
   KW_execute := c"execute"
@@ -119,12 +120,16 @@ GRAMMAR = """
   KW_left := c"left"
   KW_library := c"library"
   KW_like := c"like"
+  KW_limit := c"limit"
   KW_link := c"link"
   KW_lob := c"lob"
   KW_lock := c"lock"
+  KW_log := c"log"
   KW_loop := c"loop"
   KW_manage := c"manage"
+  KW_matched := c"matched"
   KW_materialized := c"materialized"
+  KW_merge := c"merge"
   KW_minus := c"minus"
   KW_mod := c"mod"
   KW_nocopy := c"nocopy"
@@ -161,6 +166,7 @@ GRAMMAR = """
   KW_ref := c"ref"
   KW_references := c"references"
   KW_refresh := c"refresh"
+  KW_reject := c"reject"
   KW_replace := c"replace"
   KW_resource := c"resource"
   KW_restricted := c"restricted"
@@ -403,20 +409,37 @@ GRAMMAR = """
         (KW_else, WS+, plsql_statement_list, WS+)?, KW_end, WS+, KW_case,
         simple_statement_ender
   pipe_statement := KW_pipe, WS+, expression, simple_statement_ender
+  merge_update_clause := KW_when, WS+, KW_matched, WS+, KW_then, WS+,
+        KW_update, WS+, KW_set, WS+, update_columns_clause_list,
+        (WS+, where_clause)?, (WS+, KW_delete, WS+, where_clause)?
+  merge_insert_clause := KW_when, WS+, KW_not, WS+, KW_matched, WS+,
+        KW_then, WS+, KW_insert, WS+, columns_list?, values_clause,
+        (WS*, where_clause)?
+  merge_error_logging_clause := KW_log, WS+, KW_errors,
+        (WS+, KW_into, WS+, qualified_identifier)?,
+        (WS*, LPAREN, WS*, expression, WS*, RPAREN)?,
+        (WS*, KW_reject, WS+, KW_limit, WS+, (KW_unlimited / integer_literal))?
+  merge_header := KW_merge, WS+, KW_into, WS+, qualified_identifier, WS+,
+        (?-KW_using, identifier, WS+)?, KW_using, WS+,
+        (qualified_identifier / subquery), WS+, (?-KW_on, identifier, WS+)?,
+        KW_on, WS*, LPAREN, WS*, expression, WS*, RPAREN
+  merge_statement := merge_header, (WS*, merge_update_clause)?,
+        (WS*, merge_insert_clause)?,
+        (WS*, merge_error_logging_clause)?, simple_statement_ender
   plsql_statement := if_statement / for_statement / forall_statement /
       while_statement / loop_statement / plsql_select_statement /
       block_statement / return_statement / execute_immediate_statement /
       case_statement / pipe_statement / assignment_statement /
-      insert_statement / update_statement / delete_statement / function_call /
-      commit_statement / rollback_statement / exit_statement /
-      raise_statement / null_statement / close_statement / fetch_statement /
-      open_statement / procedure_call
+      insert_statement / update_statement / delete_statement /
+      merge_statement / function_call / commit_statement / rollback_statement /
+      exit_statement / raise_statement / null_statement / close_statement /
+      fetch_statement / open_statement / procedure_call
   plsql_statement_list := plsql_statement, (WS+, plsql_statement)*
 
   # DML statements
-  columns_list := LPAREN, WS*, identifier_list, WS*, RPAREN, WS*
+  columns_list := LPAREN, WS*, qualified_identifier_list, WS*, RPAREN, WS*
   values_clause := KW_values, WS*, paren_expression_list
-  update_columns_clause := identifier, WS*, '=', WS*, expression
+  update_columns_clause := qualified_identifier, WS*, '=', WS*, expression
   update_columns_clause_list := update_columns_clause,
       (WS*, COMMA, WS*, update_columns_clause)*
   returning_clause := WS+, KW_returning, WS+, expression_list, WS+, into_clause
