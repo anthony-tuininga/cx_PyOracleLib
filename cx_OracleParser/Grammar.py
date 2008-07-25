@@ -364,7 +364,7 @@ GRAMMAR = """
   into_clause := (KW_bulk, WS+, KW_collect, WS+)?, KW_into, WS+,
       expression_list
   select_into_statement := KW_select, WS+, (KW_distinct, WS+)?,
-      ('*' / expression_list), WS+, into_clause, WS+, KW_from, WS+,
+      ('*' / select_clause_list), WS+, into_clause, WS+, KW_from, WS+,
       from_clause_list, (WS+, select_modifier_clause)*
   plsql_select_statement := select_into_statement,
       (WS+, set_operation, WS+, select_statement)*, simple_statement_ender
@@ -396,14 +396,21 @@ GRAMMAR = """
   function_call := function_expression, simple_statement_ender
   procedure_call := ?-KW_end, qualified_identifier, simple_statement_ender
   block_statement := compound_statement, simple_statement_ender
+  plsql_case_clause := KW_when, WS+, expression, WS+, KW_then, WS+,
+        plsql_statement_list
+  case_statement := case_header, WS+, plsql_case_clause,
+        (WS+, plsql_case_clause)*, WS+,
+        (KW_else, WS+, plsql_statement_list, WS+)?, KW_end, WS+, KW_case,
+        simple_statement_ender
   pipe_statement := KW_pipe, WS+, expression, simple_statement_ender
   plsql_statement := if_statement / for_statement / forall_statement /
       while_statement / loop_statement / plsql_select_statement /
       block_statement / return_statement / execute_immediate_statement /
-      pipe_statement / assignment_statement / insert_statement /
-      update_statement / delete_statement / function_call / commit_statement /
-      rollback_statement / exit_statement / raise_statement / null_statement /
-      close_statement / fetch_statement / open_statement / procedure_call
+      case_statement / pipe_statement / assignment_statement /
+      insert_statement / update_statement / delete_statement / function_call /
+      commit_statement / rollback_statement / exit_statement /
+      raise_statement / null_statement / close_statement / fetch_statement /
+      open_statement / procedure_call
   plsql_statement_list := plsql_statement, (WS+, plsql_statement)*
 
   # DML statements
