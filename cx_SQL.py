@@ -339,7 +339,10 @@ class DDLStatement(Statement):
     self.i_SQL = ""
     v_PrimaryTablespace = v_SecondaryTablespace = None
     v_NewTablespaceName = a_PrimaryTablespace
-    v_AddNoLogging = 1
+    if isinstance(self, CreateStatement):
+      v_AddNoLogging = 1
+    else:
+      v_AddNoLogging = 0
     while 1:
       v_StartPos, v_TablespaceName = self.FindTablespace(v_SQL)
       if v_StartPos < 0:
@@ -358,7 +361,7 @@ class DDLStatement(Statement):
       v_AddNoLogging = 0
     self.i_SQL += v_SQL
     return (v_PrimaryTablespace, v_SecondaryTablespace)
-  
+
   #----------------------------------------------------------------------------
   # Process()
   #   Process the statement.
