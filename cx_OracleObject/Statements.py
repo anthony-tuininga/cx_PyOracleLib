@@ -14,6 +14,12 @@ CONSTRAINTS = """
           o.deferrable
         from %(p_ViewPrefix)s_constraints o
         %(p_WhereClause)s
+          and exists
+            ( select 1
+              from %(p_ViewPrefix)s_tables
+              where owner = o.owner
+                and table_name = o.table_name
+            )
           and (o.generated = 'USER NAME' or o.constraint_type in ('P', 'U'))
         order by decode(o.constraint_type, 'P', 1, 'U', 2, 'R', 3, 'C', 4),
             o.owner, o.constraint_name"""
