@@ -331,9 +331,9 @@ GRAMMAR = """
       KW_record, WS*, LPAREN, WS*, record_item_list, WS*, RPAREN
   ref_cursor_declaration := KW_type, WS+, identifier, WS+, KW_is, WS+,
       KW_ref, WS+, KW_cursor, (WS+, KW_return, WS+, data_type)?
+  index_by_clause := KW_index, WS+, KW_by, WS+, data_type
   array_declaration := KW_type, WS+, identifier, WS+, KW_is, WS+,
-      KW_table, WS+, KW_of, WS+, data_type, WS+, KW_index, WS+, KW_by, WS+,
-      data_type
+      KW_table, WS+, KW_of, WS+, data_type, (WS+, index_by_clause)?
   procedure_declaration := procedure_definition, procedure_body?
   function_declaration := function_definition, procedure_body?
   pragma_declaration := KW_pragma, WS+, identifier,
