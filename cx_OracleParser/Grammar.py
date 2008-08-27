@@ -31,6 +31,7 @@ GRAMMAR = """
 
   # keywords
   KW_access := c"access"
+  KW_accessed := c"accessed"
   KW_add := c"add"
   KW_admin := c"admin"
   KW_administer := c"administer"
@@ -91,6 +92,7 @@ GRAMMAR = """
   KW_exempt := c"exempt"
   KW_exists := c"exists"
   KW_exit := c"exit"
+  KW_externally := c"externally"
   KW_fetch := c"fetch"
   KW_flashback := c"flashback"
   KW_for := c"for"
@@ -100,6 +102,7 @@ GRAMMAR = """
   KW_from := c"from"
   KW_function := c"function"
   KW_global := c"global"
+  KW_globally := c"globally"
   KW_grant := c"grant"
   KW_group := c"group"
   KW_having := c"having"
@@ -109,6 +112,7 @@ GRAMMAR = """
   KW_in := c"in"
   KW_index := c"index"
   KW_indextype := c"indextype"
+  KW_initialized := c"initialized"
   KW_initially := c"initially"
   KW_insert := c"insert"
   KW_instead := c"instead"
@@ -230,7 +234,7 @@ GRAMMAR = """
 
   # identifiers
   unquoted_identifier := COLON?, LETTER, [a-zA-Z0-9_$#]*
-  quoted_identifier := NAME_DELIM, unquoted_identifier, NAME_DELIM
+  quoted_identifier := NAME_DELIM, [a-zA-Z0-9_$#.]+, NAME_DELIM
   >identifier< := quoted_identifier / unquoted_identifier
   identifier_list := identifier, (WS*, COMMA, WS*, identifier)*
   identifier_modifier := ('%' / '@'), identifier
@@ -594,17 +598,17 @@ GRAMMAR = """
       simple_statement_ender
 
   # DDL statements
-  create_view_statement := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?,
-      KW_view, WS+, !, identifier, WS+, KW_as, WS+, select_statement,
-      simple_statement_ender
+  create_or_replace_clause := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?
+  create_view_statement := create_or_replace_clause, KW_view, WS+, !,
+      identifier, WS+, KW_as, WS+, select_statement, simple_statement_ender
   commit_statement := KW_commit, simple_statement_ender
   rollback_statement := KW_rollback, simple_statement_ender
   exit_statement := KW_exit, (WS+, KW_when, WS+, expression)?,
       simple_statement_ender
   package_init_section := KW_begin, WS+, plsql_statement_list, WS+,
       exception_section?
-  create_package_statement := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?,
-      KW_package, WS+, !, (KW_body, WS+)?, identifier, WS+,
+  create_package_statement := create_or_replace_clause, KW_package, WS+, !,
+      (KW_body, WS+)?, identifier, WS+,
       (KW_authid, WS+, (KW_current_user / KW_definer), WS+)?, (KW_is / KW_as),
       WS+, declaration_list, WS+, package_init_section?, KW_end,
       (WS+, identifier)?, complex_statement_ender
@@ -650,15 +654,14 @@ GRAMMAR = """
       simple_statement_ender
   type_object := KW_object, WS*, LPAREN, WS*, column_clause_list, WS*, RPAREN
   type_list := KW_table, WS+, KW_of, WS+, data_type
-  create_type_statement := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?,
-      KW_type, WS+, identifier, WS+, KW_as, WS+, (type_object / type_list),
+  create_type_statement := create_or_replace_clause, KW_type, WS+, !,
+      identifier, WS+, KW_as, WS+, (type_object / type_list),
       complex_statement_ender
   triggering_op := KW_insert / KW_update / KW_delete
   triggering_op_list := triggering_op, (WS+, KW_or, WS+, triggering_op)*
-  create_trigger_statement := KW_create, WS+, (KW_or, WS+, KW_replace, WS+)?,
-      KW_trigger, WS+, identifier, WS+, KW_instead, WS+, KW_of, WS+,
-      triggering_op_list, WS+, KW_on, WS+, identifier, WS+,
-      compound_statement, complex_statement_ender
+  create_trigger_statement := create_or_replace_clause, KW_trigger, WS+, !,
+      identifier, WS+, KW_instead, WS+, KW_of, WS+, triggering_op_list, WS+,
+      KW_on, WS+, identifier, WS+, compound_statement, complex_statement_ender
   default_tablespace_clause := KW_default, WS+, KW_tablespace, WS+, identifier
   temp_tablespace_clause := KW_temporary, WS+, KW_tablespace, WS+, identifier
   create_role_statement := KW_create, WS+, KW_role, WS+, identifier,
@@ -668,6 +671,14 @@ GRAMMAR = """
       KW_identified, WS+, KW_by, WS+, identifier,
       (WS+, default_tablespace_clause)?, (WS+, temp_tablespace_clause)?,
       simple_statement_ender
+  context_statement_accessed_option := KW_accessed, WS+, KW_globally
+  context_statement_initialized_option := KW_initialized, WS+,
+      (KW_externally / KW_globally)
+  context_statement_option := context_statement_accessed_option /
+      context_statement_initialized_option
+  create_context_statement := create_or_replace_clause, KW_context, WS+,
+      identifier, WS+, KW_using, WS+, qualified_identifier,
+      (WS+, context_statement_option)?, simple_statement_ender
 
   # SQL statements
   >sql_statement< := insert_statement / update_statement / delete_statement /
@@ -677,7 +688,8 @@ GRAMMAR = """
       create_sequence_statement / revoke_statement / create_synonym_statement /
       grant_statement / commit_statement / rollback_statement /
       create_package_statement / create_user_statement /
-      create_role_statement / create_type_statement / create_trigger_statement
+      create_role_statement / create_type_statement /
+      create_trigger_statement / create_context_statement
 
   # file
   file := (WS*, sql_statement)*, WS*
