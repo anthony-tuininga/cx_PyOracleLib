@@ -397,7 +397,8 @@ GRAMMAR = """
       expression, (WS+, KW_using, WS+, using_clause_list)?,
       simple_statement_ender
   null_statement := KW_null, simple_statement_ender
-  raise_statement := KW_raise, simple_statement_ender
+  raise_statement := KW_raise, (WS+, qualified_identifier)?,
+      simple_statement_ender
   close_statement := KW_close, WS+, identifier, simple_statement_ender
   fetch_statement := KW_fetch, WS+, identifier, WS+, into_clause,
       simple_statement_ender
