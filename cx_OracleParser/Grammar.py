@@ -522,8 +522,8 @@ GRAMMAR = """
      (KW_create, WS+, KW_session) /
      (KW_create, WS+, KW_snapshot) /
      (KW_create, WS+, KW_synonym) /
-     (KW_create, WS+, KW_table) /
      (KW_create, WS+, KW_tablespace) /
+     (KW_create, WS+, KW_table) /
      (KW_create, WS+, KW_trigger) /
      (KW_create, WS+, KW_type) /
      (KW_create, WS+, KW_user) /
