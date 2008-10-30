@@ -155,6 +155,8 @@ class Cursor(cx_Oracle.Cursor):
         except:
             exc = self.connection.ExceptionHandler(*sys.exc_info())
             exc.details.append("SQL: %s" % _sql or self.statement)
+            exc.details.append("Rows processed before error: %s" % \
+                    self.rowcount)
             exc.details.append("ROWS (%s):" % len(_args))
             for row in _args:
                 exc.details.append(str(row))
