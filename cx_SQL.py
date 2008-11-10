@@ -5,6 +5,7 @@
 
 from __future__ import generators
 
+import cx_Exceptions
 import cx_OracleUtils, os, sys, types
 
 #------------------------------------------------------------------------------
@@ -43,7 +44,7 @@ class Statement:
         v_Line = a_Iterator.next()
         v_LinesConsumed += 1
       except StopIteration:
-        raise "Unexpected end of stream parsing SQL statement."
+        raise UnexpectedEndOfStream()
 
     self.i_SQL = "\n".join(v_Lines)
     return v_LinesConsumed
@@ -193,7 +194,7 @@ class ConnectStatement(Statement):
   #   Process the statement.
   #----------------------------------------------------------------------------
   def Process(self, a_Connection, a_Cursor):
-    raise "Unable to process connect statements at this time."
+    raise UnableToProcessConnectStatements()
 
   #----------------------------------------------------------------------------
   # ArgumentValue()
@@ -705,7 +706,7 @@ def ChooseStatementClass(a_LineNo, a_Line):
     return DeleteStatement(a_LineNo, a_Line)
 
   # otherwise, we don't know anything about this type of statement
-  raise "Unknown statement at line %d: %s" % (a_LineNo, a_Line)
+  raise UnknownStatement(lineNumber = a_LineNo, line = a_Line)
 
 #------------------------------------------------------------------------------
 # ParseStatements()
@@ -741,4 +742,14 @@ def ParseStatementsInFile(a_FileOrName):
     else:
       v_File = open(a_FileOrName)
   return ParseStatements(iter(v_File))
+
+
+class UnableToProcessConnectStatements(cx_Exceptions.BaseException):
+    message = "Unable to process connect statements at this time."
+
+class UnexpectedEndOfStream(cx_Exceptions.BaseException):
+    message = "Unexpected end of stream parsing SQL statement."
+
+class UnknownStatement(cx_Exceptions.BaseException):
+    message = "Unknown statement at line %(lineNumber)s: %(line)s"
 
