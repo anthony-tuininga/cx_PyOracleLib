@@ -323,7 +323,8 @@ class DDLStatement(Statement):
   # replaced with the secondary tablespace. Nothing will be done if the
   # tablespace values are None.
   #----------------------------------------------------------------------------
-  def ModifyForUpgrade(self, a_PrimaryTablespace, a_SecondaryTablespace):
+  def ModifyForUpgrade(self, a_PrimaryTablespace, a_SecondaryTablespace,
+      a_SuppressNoLogging = False):
 
     # add the novalidate clause, if applicable
     if self.i_ObjectType in ("foreign key", "check constraint"):
@@ -340,7 +341,7 @@ class DDLStatement(Statement):
     self.i_SQL = ""
     v_PrimaryTablespace = v_SecondaryTablespace = None
     v_NewTablespaceName = a_PrimaryTablespace
-    if isinstance(self, CreateStatement):
+    if isinstance(self, CreateStatement) and not a_SuppressNoLogging:
       v_AddNoLogging = 1
     else:
       v_AddNoLogging = 0
