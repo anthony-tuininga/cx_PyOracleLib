@@ -360,8 +360,8 @@ class ObjectWithTriggers(Object):
         """Return an interator for the triggers associated with the object."""
         return ObjectIterator(self.environment, "AssocTriggers",
                 Statements.TRIGGERS,
-                "where o.table_owner = :p_Owner and o.table_name = :p_Name",
-                Trigger, p_Owner = self.owner, p_Name = self.name)
+                "where o.table_owner = :owner and o.table_name = :name",
+                Trigger, owner = self.owner, name = self.name)
 
 
 class Context(Object):
@@ -403,8 +403,8 @@ class Constraint(Object):
             self.__RetrieveColumns()
             for index in ObjectIterator(self.environment, "Index",
                     Statements.INDEXES_ANY,
-                    "where o.owner = :p_Owner and o.index_name = :p_Name",
-                    Index, p_Owner = self.owner, p_Name = self.name):
+                    "where o.owner = :owner and o.index_name = :name",
+                    Index, owner = self.owner, name = self.name):
                 self.relatedIndex = index
             environment.CacheObject(self)
         elif self.constraintType == "R":
@@ -417,8 +417,8 @@ class Constraint(Object):
             if not self.refConstraint:
                 refConstraints = list(ObjectIterator(self.environment,
                     "Constraint", Statements.CONSTRAINTS,
-                    "where o.owner = :p_Owner and o.constraint_name = :p_Name",
-                    Constraint, p_Owner = refOwner, p_Name = refConstraintName))
+                    "where o.owner = :owner and o.constraint_name = :name",
+                    Constraint, owner = refOwner, name = refConstraintName))
                 if not refConstraints:
                     raise CannotFetchReferencedConstraintInfo(
                             owner = refOwner, name = refConstraintName)
@@ -446,12 +446,12 @@ class Constraint(Object):
             cursor.prepare("""
                     select column_name
                     from %s_cons_columns
-                    where owner = :p_Owner
-                      and constraint_name = :p_Name
+                    where owner = :owner
+                      and constraint_name = :name
                     order by position""" % self.environment.ViewPrefix())
         cursor.execute(None,
-                p_Owner = self.owner,
-                p_Name = self.name)
+                owner = self.owner,
+                name = self.name)
         self.columns = [self.environment.NameForOutput(c) for c, in cursor]
 
     def Export(self, outFile, wantTablespace, wantStorage):
@@ -677,17 +677,17 @@ class Lob(ObjectWithStorage):
             else:
                 statement += "from user_segments\n"
             statement += "where segment_type = 'LOBSEGMENT' " + \
-                "and segment_name = :p_SegmentName"
+                "and segment_name = :segmentName"
             if self.environment.useDbaViews:
-                statement += " and owner = :p_Owner"
+                statement += " and owner = :owner"
             cursor.prepare(statement)
         if self.environment.useDbaViews:
             cursor.execute(None,
-                    p_SegmentName = self.segmentName,
-                    p_Owner = self.owner)
+                    segmentName = self.segmentName,
+                    owner = self.owner)
         else:
             cursor.execute(None,
-                    p_SegmentName = self.segmentName)
+                    segmentName = self.segmentName)
         row = cursor.fetchone()
         if not row:
             raise "Unable to locate LOB segment %s" % self.name
@@ -800,15 +800,15 @@ class StoredProc(Object):
             cursor.prepare("""
                     select text
                     from %s_source
-                    where owner = :p_Owner
-                      and name = :p_Name
-                      and type = :p_Type
+                    where owner = :owner
+                      and name = :name
+                      and type = :type
                     order by line""" % self.environment.ViewPrefix())
         cursor.execute(None,
-                p_Owner = self.owner,
-                p_Name = self.name,
-                p_Type = self.type)
-        self.source = "".join([t for t, in cursor.fetchall()]).strip()
+                owner = self.owner,
+                name = self.name,
+                type = self.type)
+        self.source = "".join([t for t, in cursor])
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
@@ -935,20 +935,20 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
                       nvl(char_col_decl_length, data_length),
                       data_default
                     from %s_tab_columns
-                    where owner = :p_Owner
-                      and table_name = :p_Name
+                    where owner = :owner
+                      and table_name = :name
                     order by column_id""" % self.environment.ViewPrefix())
         cursor.execute(None,
-                p_Owner = self.owner,
-                p_Name = self.name)
+                owner = self.owner,
+                name = self.name)
         self.columns = cursor.fetchall()
         self.lobs = []
         lobColumns = [c[0] for c in self.columns if c[1] in ("CLOB", "BLOB")]
         if lobColumns:
             self.lobs = list(ObjectIterator(self.environment, "Lobs",
                     Statements.LOBS,
-                    "where o.owner = :p_Owner and o.table_name = :p_Name", Lob,
-                    p_Owner = self.owner, p_Name = self.name))
+                    "where o.owner = :owner and o.table_name = :name", Lob,
+                    owner = self.owner, name = self.name))
 
     def __RetrievePartitionInfo(self):
         """Retrieve partition info for the table."""
@@ -983,7 +983,7 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
     def Constraints(self, constraintType = None):
         """Return an interator for the constraints for the table."""
         cursorName = "TableConstraints"
-        whereClause = "where o.owner = :p_Owner and o.table_name = :p_Name"
+        whereClause = "where o.owner = :owner and o.table_name = :name"
         if constraintType is not None:
             cursorName = "TablePrimaryKey"
             whereClause += " and o.constraint_type = '%s'" % constraintType
@@ -992,7 +992,7 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
             whereClause += " and o.constraint_type != 'P'"
         return ObjectIterator(self.environment, cursorName,
                 Statements.CONSTRAINTS, whereClause, Constraint,
-                p_Owner = self.owner, p_Name = self.name)
+                owner = self.owner, name = self.name)
 
     def Export(self, outFile, wantTablespace, wantStorage):
         """Export the object as a SQL statement."""
@@ -1030,22 +1030,22 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
         """Return an iterator for the indexes for the table."""
         return ObjectIterator(self.environment, "TableIndexes",
                 Statements.INDEXES,
-                "where o.owner = :p_Owner and o.table_name = :p_Name",
-                Index, p_Owner = self.owner, p_Name = self.name)
+                "where o.owner = :owner and o.table_name = :name",
+                Index, owner = self.owner, name = self.name)
 
     def ReferencedConstraints(self):
         """Return an iterator for the referencing constraints for the table."""
         clause = """,
                   %s_constraints p
-                where p.owner = :p_Owner
-                  and p.table_name = :p_Name
+                where p.owner = :owner
+                  and p.table_name = :name
                   and p.constraint_type in ('P', 'U')
                   and o.r_owner = p.owner
                   and o.r_constraint_name = p.constraint_name""" % \
                 self.environment.ViewPrefix()
         return ObjectIterator(self.environment, "ReferencedConstraints",
                 Statements.CONSTRAINTS, clause, Constraint,
-                p_Owner = self.owner, p_Name = self.name)
+                owner = self.owner, name = self.name)
 
 
 class Trigger(Object):
@@ -1095,8 +1095,8 @@ class User(UserOrRole):
                       tablespace_name,
                       max_bytes
                     from dba_ts_quotas
-                    where username = :p_Name""")
-        cursor.execute(None, p_Name = self.name)
+                    where username = :name""")
+        cursor.execute(None, name = self.name)
         self.quotas = cursor.fetchall()
         self.quotas.sort()
 
@@ -1133,8 +1133,8 @@ class ViewNoRetrieve(View):
 
     def __init__(self, environment, owner, name, type):
         cursor = PreparedCursor(environment, "View", Statements.VIEWS,
-                "where o.owner = :p_Owner and o.view_name = :p_Name")
-        cursor.execute(None, p_Owner = owner, p_Name = name)
+                "where o.owner = :owner and o.view_name = :name")
+        cursor.execute(None, owner = owner, name = name)
         row = cursor.fetchone()
         View.__init__(self, environment, row)
 
