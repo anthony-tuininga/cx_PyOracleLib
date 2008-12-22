@@ -1,5 +1,6 @@
 """Defines utility functions."""
 
+import cx_Exceptions
 import sys
 
 import Object
@@ -88,7 +89,7 @@ def OrderObjects(objects, dependencies):
                 refKeys.sort()
                 for refKey in refKeys:
                     print >> sys.stderr, "    %s.%s (%s)" % refKey
-            raise "Circular reference detected!"
+            raise CircularReferenceDetected()
 
         # for each owner that has something to describe
         while keysToOutput:
@@ -172,4 +173,8 @@ def SizeForOutput(size):
             return "%gk" % kilobytes
     else:
         return "%g" % size
+
+
+class CircularReferenceDetected(cx_Exceptions.BaseException):
+    message = "Circular reference detected!"
 

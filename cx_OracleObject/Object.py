@@ -591,10 +591,9 @@ class Index(ObjectWithStorage):
                 name = self.name)
         row = cursor.fetchone()
         if row is None:
-            message = "Index %s.%s is partitioned but no row found in " + \
-                      "%s_part_indexes."
-            raise message % \
-                    (self.owner, self.name, self.environment.ViewPrefix())
+            raise CannotLocatePartitionedIndexInfo(owner = self.owner,
+                    viewPrefix = self.environment.ViewPrefix(),
+                    name = self.name)
         self.partitionType, self.locality = row
         if self.locality == "LOCAL":
             partitionKeywords = None
@@ -690,7 +689,7 @@ class Lob(ObjectWithStorage):
                     segmentName = self.segmentName)
         row = cursor.fetchone()
         if not row:
-            raise "Unable to locate LOB segment %s" % self.name
+            raise CannotLocateLOBSegment(owner = self.owner, name = self.name)
         self.tablespaceName, self.initialExtent, self.nextExtent, \
                 self.minExtents, self.maxExtents, self.percentIncrease = row
 
@@ -965,10 +964,9 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
                 name = self.name)
         row = cursor.fetchone()
         if row is None:
-            message = "Table %s.%s is partitioned but no row found in " + \
-                      "%s_part_tables."
-            raise message % \
-                    (self.owner, self.name, self.environment.ViewPrefix())
+            raise CannotLocatePartitionedTableInfo(owner = self.owner,
+                    viewPrefix = self.environment.ViewPrefix(),
+                    name = self.name)
         self.partitionType, = row
         partitionKeywords = "values"
         if self.partitionType == "RANGE":
@@ -1166,4 +1164,18 @@ def PreparedCursor(environment, tag, statement, whereClause):
 class CannotFetchReferencedConstraintInfo(cx_Exceptions.BaseException):
     message = "Cannot fetch information about referenced constraint named\n" \
               "%(owner)s.%(name)s. Grant privileges or use --use-dba-views."
+
+
+class CannotLocateLOBSegment(cx_Exceptions.BaseException):
+    message = "Unable to locate LOB segment %(owner)s.%(name)s"
+
+
+class CannotLocatePartitionedIndexInfo(cx_Exceptions.BaseException):
+    message = "Index %(owner)s.%(name)s is partitioned but no row found in " \
+              "%(viewPrefix)s_part_indexes."
+
+
+class CannotLocatePartitionedTableInfo(cx_Exceptions.BaseException):
+    message = "Table %(owner)s.%(name)s is partitioned but no row found in " \
+              "%(viewPrefix)s_part_tables."
 
