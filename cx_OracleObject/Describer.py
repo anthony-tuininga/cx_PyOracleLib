@@ -236,7 +236,7 @@ class Describer(object):
         """Return true if the object should be included in the export."""
         if self.includedObjects is None:
             return True
-        if isinstance(obj, (Object.Constraint, Object.Index, Object.Trigger)):
+        if isinstance(obj, (Object.Constraint, Object.Index)):
             name = obj.tableName
         elif isinstance(obj, Object.Synonym):
             name = obj.objectName
