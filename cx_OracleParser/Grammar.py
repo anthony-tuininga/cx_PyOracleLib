@@ -50,9 +50,11 @@ GRAMMAR = """
   KW_body := c"body"
   KW_bulk := c"bulk"
   KW_by := c"by"
+  KW_byte := c"byte"
   KW_cascade := c"cascade"
   KW_case := c"case"
   KW_cast := c"cast"
+  KW_char := c"char"
   KW_check := c"check"
   KW_close := c"close"
   KW_cluster := c"cluster"
@@ -307,7 +309,9 @@ GRAMMAR = """
           (simple_select_statement / paren_select_statement) )*
 
   # PL/SQL definitions
-  >data_size< := integer_literal, (WS*, COMMA, WS*, integer_literal)?
+  >data_size_modifier< := WS+, (KW_char / KW_byte)
+  >data_scale< := WS*, COMMA, WS*, integer_literal
+  >data_size< := integer_literal, (data_scale / data_size_modifier)?
   data_type := qualified_identifier, (LPAREN, WS*, data_size, WS*, RPAREN)?
   argument := identifier, WS+, (KW_in, WS+)?, (KW_out, WS+)?,
       (KW_nocopy, WS+)?, data_type, (WS+, KW_default, WS+, expression)?,
