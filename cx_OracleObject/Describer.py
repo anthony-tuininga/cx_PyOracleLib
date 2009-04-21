@@ -37,6 +37,9 @@ class Describer(object):
         else:
             self.outFile = outFile
         Utils.SetOptions(self, options)
+        fileName = getattr(options, "nameFile", None)
+        if fileName is not None:
+            self.schemas = [s.strip() for s in open(fileName)]
         if not self.schemas:
             cursor = environment.connection.cursor()
             cursor.execute("select user from dual")
