@@ -26,7 +26,6 @@ modules = [
         "cx_OracleParser.Parser",
         "cx_OracleParser.Statements",
         "cx_OracleUtils",
-        "cx_RecordSet",
         "cx_SQL"
 ]
 
