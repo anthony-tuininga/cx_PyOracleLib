@@ -177,7 +177,8 @@ class Describer(object):
         print >> sys.stderr, "Describing roles..."
         whereClause = "where o.role in (select granted_role " + \
                 "from dba_role_privs where admin_option = 'YES' " + \
-                "and grantee %s)" % self.schemasClause
+                "and grantee %s) or o.role %s" % \
+               (self.schemasClause, self.schemasClause)
         self.ExportObjects(Object.ObjectIterator(self.environment, "AllRoles",
                 Statements.ROLES, whereClause, Object.Role))
 
