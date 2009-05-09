@@ -7,11 +7,16 @@ import Statements
 __all__ = [ "Processor" ]
 
 class Processor(cx_Parser.DispatchProcessor):
-    CreateViewStatement = Statements.CreateView
-    GrantStatement = Statements.Grant
+    CreateTableStatement = Statements.CreateTableStatement
+    CreateViewStatement = Statements.CreateViewStatement
+    GrantStatement = Statements.GrantStatement
 
     def __init__(self, initialOwner = None):
         self.owner = initialOwner
+
+    def create_table_statement(self, sql, tag, start, end, children):
+        owner, name = self.Dispatch(sql, children[0])
+        return self.CreateTableStatement(sql[start:end], owner, name)
 
     def create_view_statement(self, sql, tag, start, end, children):
         owner, name = self.Dispatch(sql, children[0])
