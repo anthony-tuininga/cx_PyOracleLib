@@ -10,17 +10,27 @@ class Statement(object):
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
 
-    def GetLogMessage(self):
+    def GetLogMessage(self, cursor):
         return None
 
     def Process(self, cursor):
         cursor.execute(sql)
-        message = self.GetLogMessage()
+        message = self.GetLogMessage(cursor)
         if message is not None:
             cx_Logging.Trace("%s", message)
 
 
-class CreateStatement(Statement):
+class ModifyObjectStatement(Statement):
+
+    def __init__(self, sql, name):
+        self.sql = sql
+        self.name = name
+
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__.__name__, self.name)
+
+
+class ModifyObjectWithOwnerStatement(ModifyObjectStatement):
 
     def __init__(self, sql, owner, name):
         self.sql = sql
@@ -30,95 +40,178 @@ class CreateStatement(Statement):
     def __repr__(self):
         return "<%s %s.%s>" % (self.__class__.__name__, self.owner, self.name)
 
-    def GetLogMessage(self):
-        return "%s %s.%s created." % \
-                (self.type.capitalize(), self.owner, self.name)
+
+class DDLStatement(ModifyObjectStatement):
+
+    def GetLogMessage(self, cursor):
+        return "%s %s %s." % \
+                (self.type.capitalize(), self.name, self.action)
 
 
-class CreateTableStatement(CreateStatement):
+class DDLWithOwnerStatement(ModifyObjectWithOwnerStatement):
+
+    def GetLogMessage(self, cursor):
+        return "%s %s.%s %s." % \
+                (self.type.capitalize(), self.owner, self.name, self.action)
+
+
+class DMLStatement(ModifyObjectStatement):
+
+    def GetLogMessage(self, cursor):
+        rowsAffected = cursor.rowcount
+        modifier = "row"
+        if rowsAffected != 1:
+            modifier = "rows"
+        return "%s %s %s in %s.%s." % \
+                (self.action, rowsAffected, modifier, self.owner, self.name)
+
+
+class CommentStatement(Statement):
+
+    def GetLogMessage(self, cursor):
+        return "Comment created."
+
+
+class CommitStatement(Statement):
+
+    def __init__(self):
+        pass
+
+    def Process(self, cursor):
+        cursor.connection.commit()
+        cx_Logging.Trace("Commit point reached.")
+
+
+class ConnectStatement(Statement):
+
+    def __init__(self, connectString):
+        self.connectString = connectString
+        
+
+class CreateCheckConstraintStatement(DDLWithOwnerStatement):
+    type = "CHECK CONSTRAINT"
+    action = "created"
+
+
+class CreateForeignKeyStatement(DDLWithOwnerStatement):
+    type = "FOREIGN KEY"
+    action = "created"
+
+
+class CreateIndexStatement(DDLWithOwnerStatement):
+    type = "INDEX"
+    action = "created"
+
+
+class CreatePackageStatement(DDLWithOwnerStatement):
+    type = "PACKAGE"
+    action = "created"
+
+
+class CreatePackageBodyStatement(DDLWithOwnerStatement):
+    type = "PACKAGE BODY"
+    action = "created"
+
+
+class CreatePrimaryKeyStatement(DDLWithOwnerStatement):
+    type = "PRIMARY KEY"
+    action = "created"
+
+
+class CreatePublicSynonymStatement(Statement):
+    type = "PUBLIC SYNONYM"
+
+    def __init__(self, sql, name):
+        self.sql = sql
+        self.name = name
+
+    def __repr__(self):
+        return "<%s %s.%s>" % (self.__class__.__name__, self.name)
+
+    def GetLogMessage(self, cursor):
+        return "%s %s created." % (self.type.capitalize(), self.name)
+
+
+class CreateRoleStatement(DDLStatement):
+    type = "ROLE"
+    action = "created"
+
+
+class CreateSequenceStatement(DDLWithOwnerStatement):
+    type = "SEQUENCE"
+    action = "created"
+
+
+class CreateSynonymStatement(DDLWithOwnerStatement):
+    type = "SYNONYM"
+    action = "created"
+
+
+class CreateTableStatement(DDLWithOwnerStatement):
     type = "TABLE"
+    action = "created"
 
 
-class CreateViewStatement(CreateStatement):
+class CreateTriggerStatement(DDLWithOwnerStatement):
+    type = "TRIGGER"
+    action = "created"
+
+
+class CreateTypeStatement(DDLWithOwnerStatement):
+    type = "TYPE"
+    action = "created"
+
+
+class CreateTypeBodyStatement(DDLWithOwnerStatement):
+    type = "TYPE BODY"
+    action = "created"
+
+
+class CreateUniqueConstraintStatement(DDLWithOwnerStatement):
+    type = "UNIQUE CONSTRAINT"
+    action = "created"
+
+
+class CreateUserStatement(DDLStatement):
+    type = "USER"
+    action = "created"
+
+
+class CreateViewStatement(DDLWithOwnerStatement):
     type = "VIEW"
+    action = "created"
+
+
+class DeleteStatement(DMLStatement):
+    action = "Deleted"
 
 
 class GrantStatement(Statement):
 
-    def GetLogMessage(self):
-        return "Privileges granted."
+    def GetLogMessage(self, cursor):
+        return "Privilege(s) granted."
 
 
+class InsertStatement(DMLStatement):
+    action = "Inserted"
 
 
-class CreateConstraint(CreateStatement):
+class RevokeStatement(Statement):
 
-    def __init__(self, sql, owner, name, tableName):
-        super(Constraint, self).__init__(sql, owner, name, self.type)
-        self.tableName = tableName
-
+    def GetLogMessage(self, cursor):
+        return "Privilege(s) revoked."
 
 
-class CheckConstraint(CreateConstraint):
-    type = "CHECK CONSTRAINT"
+class RollbackStatement(Statement):
+
+    def __init__(self):
+        pass
+
+    def Process(self, cursor):
+        cursor.connection.rollback()
+        cx_Logging.Trace("Rolled back.")
 
 
-class ForeignKey(CreateConstraint):
-    type = "FOREIGN KEY"
-
-
-
-class Index(Statement):
-    type = "INDEX"
-
-
-class Package(Statement):
-    type = "PACKAGE"
-
-
-class PackageBody(Statement):
-    type = "PACKAGE BODY"
-
-
-class PrimaryKey(CreateConstraint):
-    type = "PRIMARY KEY"
-
-
-class PublicSynonym(Statement):
-    type = "PUBLIC SYNONYM"
-
-
-class Revoke(object):
-
-    def __init__(self, sql):
-        self.sql = sql
-
-
-class Role(Statement):
-    type = "ROLE"
-
-
-class Sequence(Statement):
-    type = "SEQUENCE"
-
-
-class Synonym(Statement):
-    type = "SYNONYM"
-
-
-class Trigger(Statement):
-    type = "TRIGGER"
-
-
-class Type(Statement):
-    type = "TYPE"
-
-
-class UniqueConstraint(CreateConstraint):
-    type = "UNIQUE CONSTRAINT"
-
-
-class User(Statement):
-    type = "USER"
-
+class UpdateStatement(DMLStatement):
+    action = "Updated"
 
