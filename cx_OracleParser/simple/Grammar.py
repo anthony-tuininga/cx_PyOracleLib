@@ -16,26 +16,36 @@ GRAMMAR = """
   <EXPONENT> := [Ee]
   <LETTER> := [A-Za-z]
   <PERIOD> := '.'
-  <COLON> := ':'
   <COMMA> := ','
   <SLASH> := '/'
-  <CHAR> := [-A-Za-z0-9/*+=,.|()_]
+  <AT> := '@'
+  <CHAR> := [-A-Za-z0-9/*+=,.|()<>_]
   <token> := literal / CHAR+ / WS+
 
   # keywords
+  <KW_add> := c"add"
   <KW_alter> := c"alter"
   <KW_as> := c"as"
   <KW_body> := c"body"
+  <KW_check> := c"check"
+  <KW_comment> := c"comment"
   <KW_commit> := c"commit"
+  <KW_connect> := c"connect"
+  <KW_constraint> := c"constraint"
   <KW_context> := c"context"
   <KW_create> := c"create"
   <KW_delete> := c"delete"
+  <KW_from> := c"from"
+  <KW_foreign> := c"foreign"
   <KW_global> := c"global"
   <KW_grant> := c"grant"
   <KW_index> := c"index"
+  <KW_into> := c"into"
   <KW_insert> := c"insert"
+  <KW_key> := c"key"
   <KW_or> := c"or"
   <KW_package> := c"package"
+  <KW_primary> := c"primary"
   <KW_public> := c"public"
   <KW_replace> := c"replace"
   <KW_revoke> := c"revoke"
@@ -64,7 +74,7 @@ GRAMMAR = """
   literal := (string_literal / float_literal / integer_literal)
 
   # identifiers
-  unquoted_identifier := COLON?, LETTER, [a-zA-Z0-9_$#]*
+  unquoted_identifier := LETTER, [a-zA-Z0-9_$#]*
   quoted_identifier := NAME_DELIM, [a-zA-Z0-9_$#.]+, NAME_DELIM
   >identifier< := quoted_identifier / unquoted_identifier
   qualified_identifier := identifier, (PERIOD, identifier)?
@@ -76,8 +86,17 @@ GRAMMAR = """
   <complex_statement_ender> := simple_statement_ender,
       (?-complex_statement_terminator, simple_statement_ender)*,
       complex_statement_terminator
+  >constraint_common_clause< := KW_alter, WS+, KW_table, WS+,
+      qualified_identifier, WS+, KW_add, WS+, KW_constraint, WS+,
+      identifier, WS+
 
-  # statement
+  # statements
+  check_constraint := constraint_common_clause, KW_check,
+      simple_statement_ender
+  comment_statement := KW_comment, simple_statement_ender
+  commit_statement := KW_commit, simple_statement_ender
+  connect_statement := KW_connect, WS+, identifier,
+      (SLASH, identifier, (AT, identifier)?)?
   create_context_statement := KW_create, WS+, KW_context, WS+, identifier,
       simple_statement_ender
   create_index_statement := KW_create, WS+, (KW_unique, WS+)?, KW_index, WS+,
@@ -107,21 +126,23 @@ GRAMMAR = """
       simple_statement_ender
   create_view_statement := create_or_replace_clause, KW_view, WS+,
       qualified_identifier, WS+, KW_as, simple_statement_ender
+  delete_statement := KW_delete, WS+, (KW_from, WS+)?, qualified_identifier,
+      simple_statement_ender
+  foreign_key_constraint := constraint_common_clause, KW_foreign, WS+, KW_key,
+      simple_statement_ender
   grant_statement := KW_grant, simple_statement_ender
+  insert_statement := KW_insert, WS+, KW_into, WS+, qualified_identifier,
+      simple_statement_ender
+  primary_key_constraint := constraint_common_clause, KW_primary, WS+, KW_key,
+      simple_statement_ender
   revoke_statement := KW_revoke, simple_statement_ender
+  rollback_statement := KW_rollback, simple_statement_ender
+  unique_constraint := constraint_common_clause, KW_unique,
+      simple_statement_ender
+  update_statement := KW_update, WS+, qualified_identifier,
+      simple_statement_ender
 
-  # SQL statements
-  insert_statement := KW_insert
-  update_statement := KW_update
-  delete_statement := KW_delete
-  primary_key_constraint := KW_alter
-  unique_constraint := KW_alter
-  foreign_key_constraint := KW_alter
-  check_constraint := KW_alter
-  commit_statement := KW_commit
-  rollback_statement := KW_commit
-
-  # SQL statements
+  # all possible statements
   >sql_statement< := insert_statement / update_statement / delete_statement /
       create_table_statement / create_view_statement / primary_key_constraint /
       unique_constraint / foreign_key_constraint / check_constraint /
@@ -131,7 +152,8 @@ GRAMMAR = """
       create_package_body_statement / create_package_statement /
       create_user_statement / create_role_statement /
       create_type_body_statement / create_type_statement /
-      create_trigger_statement / create_context_statement
+      create_trigger_statement / create_context_statement /
+      comment_statement / connect_statement
 
   file := (WS*, sql_statement)*, WS*
 

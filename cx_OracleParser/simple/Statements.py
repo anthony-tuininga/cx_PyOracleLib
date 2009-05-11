@@ -55,7 +55,7 @@ class DDLWithOwnerStatement(ModifyObjectWithOwnerStatement):
                 (self.type.capitalize(), self.owner, self.name, self.action)
 
 
-class DMLStatement(ModifyObjectStatement):
+class DMLStatement(ModifyObjectWithOwnerStatement):
 
     def GetLogMessage(self, cursor):
         rowsAffected = cursor.rowcount
@@ -74,9 +74,6 @@ class CommentStatement(Statement):
 
 class CommitStatement(Statement):
 
-    def __init__(self):
-        pass
-
     def Process(self, cursor):
         cursor.connection.commit()
         cx_Logging.Trace("Commit point reached.")
@@ -84,9 +81,11 @@ class CommitStatement(Statement):
 
 class ConnectStatement(Statement):
 
-    def __init__(self, connectString):
-        self.connectString = connectString
-        
+    def __init__(self, user, password = None, dsn = None):
+        self.user = user
+        self.password = password
+        self.dsn = dsn
+
 
 class CreateCheckConstraintStatement(DDLWithOwnerStatement):
     type = "CHECK CONSTRAINT"
@@ -118,18 +117,9 @@ class CreatePrimaryKeyStatement(DDLWithOwnerStatement):
     action = "created"
 
 
-class CreatePublicSynonymStatement(Statement):
+class CreatePublicSynonymStatement(DDLStatement):
     type = "PUBLIC SYNONYM"
-
-    def __init__(self, sql, name):
-        self.sql = sql
-        self.name = name
-
-    def __repr__(self):
-        return "<%s %s.%s>" % (self.__class__.__name__, self.name)
-
-    def GetLogMessage(self, cursor):
-        return "%s %s created." % (self.type.capitalize(), self.name)
+    action = "created"
 
 
 class CreateRoleStatement(DDLStatement):
@@ -203,9 +193,6 @@ class RevokeStatement(Statement):
 
 
 class RollbackStatement(Statement):
-
-    def __init__(self):
-        pass
 
     def Process(self, cursor):
         cursor.connection.rollback()
