@@ -41,12 +41,6 @@ class ObjectStatement(Statement):
                 (self.__class__.__name__, self.owner, self.name,
                  self.type.upper())
 
-    def Execute(self, cursor):
-        super(ObjectStatement, self).Execute(cursor)
-        cursor = cx_OracleUtils.PrepareErrorsCursor(cursor.connection)
-        cx_OracleUtils.CheckForErrors(cursor, self.owner, self.name,
-                self.type.upper(), self.action + " with", self.lineNumber - 1)
-
     def GetLogMessage(self, cursor):
         if self.owner is None:
             return "%s %s %s." % \
@@ -107,6 +101,12 @@ class ConnectStatement(Statement):
 
 class CreateObjectStatement(ObjectStatement):
     action = "created"
+
+    def Execute(self, cursor):
+        super(ObjectStatement, self).Execute(cursor)
+        cursor = cx_OracleUtils.PrepareErrorsCursor(cursor.connection)
+        cx_OracleUtils.CheckForErrors(cursor, self.owner, self.name,
+                self.type.upper(), self.action + " with", self.lineNumber - 1)
 
 
 class DropObjectStatement(ObjectStatement):
