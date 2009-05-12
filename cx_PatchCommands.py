@@ -70,7 +70,7 @@ class ExecuteSQLCommands(CommandBase):
         sql = open(self.fileName).read().strip()
         connectStatementClass = parser.parser.processor.ConnectStatement
         try:
-            for statement in parser.Parse(sql, user, productionName = "file"):
+            for statement in parser.IterParse(sql, user):
                 if isinstance(statement, connectStatementClass):
                     connection = cx_OracleEx.Connection(statement.user,
                             statement.password or connection.password,
@@ -81,7 +81,7 @@ class ExecuteSQLCommands(CommandBase):
                 else:
                     statement.Process(cursor)
         except cx_OracleParser.ParsingFailed, value:
-            cx_Logging.Error("Parsing failed at position %s (%s...)",
-                    value.arguments["pos"],
+            cx_Logging.Error("Parsing failed at line %s (%s...)",
+                    value.arguments["lineNumber"],
                     value.arguments["remainingString"][:100])
 

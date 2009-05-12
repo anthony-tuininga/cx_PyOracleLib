@@ -145,6 +145,7 @@ GRAMMAR = """
       update_statement / delete_statement / rename_statement /
       truncate_statement / anonymous_plsql_block
 
+  statement := WS*, sql_statement, WS*
   file := (WS*, sql_statement)*, WS*
 
 """
