@@ -153,7 +153,7 @@ def IdentifierRepr(identifier):
     return '"%s"' % identifier
 
 
-def PrepareErrorsCursor(connection, viewPrefix):
+def PrepareErrorsCursor(connection, viewPrefix = "all"):
     """Prepare a cursor for retrieving errors from the database."""
     cursor = connection.cursor()
     cursor.prepare("""
