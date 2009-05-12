@@ -134,6 +134,7 @@ class Describer(object):
 
     def ExportObject(self, object):
         """Exports the object to the output."""
+        self.SetOwner(object.owner, object.type)
         if isinstance(object, Object.Sequence):
             object.Export(self.outFile, self.wantSequenceValues)
         elif isinstance(object, (Object.ObjectWithStorage, Object.Constraint)):
@@ -169,7 +170,6 @@ class Describer(object):
         for obj in sequence:
             if not self.ObjectIncluded(obj):
                 continue
-            self.SetOwner(obj.owner, obj.type)
             self.ExportObject(obj)
 
     def ExportRoles(self):
