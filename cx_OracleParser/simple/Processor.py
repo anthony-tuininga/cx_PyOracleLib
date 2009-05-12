@@ -8,6 +8,7 @@ __all__ = [ "Processor" ]
 
 class Processor(cx_Parser.DispatchProcessor):
     AlterObjectStatement = Statements.AlterObjectStatement
+    AnonymousPlsqlBlock = Statements.AnonymousPlsqlBlock
     CommentStatement = Statements.CommentStatement
     CommitStatement = Statements.CommitStatement
     ConnectStatement = Statements.ConnectStatement
@@ -16,8 +17,10 @@ class Processor(cx_Parser.DispatchProcessor):
     DropObjectStatement = Statements.DropObjectStatement
     GrantStatement = Statements.GrantStatement
     InsertStatement = Statements.InsertStatement
+    RenameObjectStatement = Statements.RenameObjectStatement
     RevokeStatement = Statements.RevokeStatement
     RollbackStatement = Statements.RollbackStatement
+    TruncateObjectStatement = Statements.TruncateObjectStatement
     UpdateStatement = Statements.UpdateStatement
 
     def __init__(self, initialOwner = None):
@@ -26,6 +29,9 @@ class Processor(cx_Parser.DispatchProcessor):
     def _merge_keywords(self, children):
         keywords = [t[3:] for t, st, e, c in children]
         return " ".join(keywords)
+
+    def anonymous_plsql_block(self, sql, tag, start, end, children):
+        return self.AnonymousPlsqlBlock(sql[start:end])
 
     def comment_statement(self, sql, tag, start, end, children):
         return self.CommentStatement(sql[start:end])
@@ -89,6 +95,10 @@ class Processor(cx_Parser.DispatchProcessor):
     def quoted_identifier(self, sql, tag, start, end, children):
         return sql[start + 1:end - 1]
 
+    def rename_statement(self, sql, tag, start, end, children):
+        name = self.Dispatch(sql, children[0])
+        return self.RenameObjectStatement(sql[start:end], name)
+
     def revoke_statement(self, sql, tag, start, end, children):
         return self.RevokeStatement(sql[start:end])
 
@@ -97,6 +107,10 @@ class Processor(cx_Parser.DispatchProcessor):
 
     def simple_object_type(self, sql, tag, start, end, children):
         return self._merge_keywords(children)
+
+    def truncate_statement(self, sql, tag, start, end, children):
+        owner, name = self.Dispatch(sql, children[1])
+        return self.TruncateObjectStatement(sql[start:end], owner, name)
 
     def unquoted_identifier(self, sql, tag, start, end, children):
         return sql[start:end].upper()

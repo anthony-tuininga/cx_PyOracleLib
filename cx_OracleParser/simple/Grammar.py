@@ -51,11 +51,13 @@ GRAMMAR = """
   <KW_add> := c"add"
   <KW_alter> := c"alter"
   <KW_as> := c"as"
+  <KW_begin> := c"begin"
   <KW_comment> := c"comment"
   <KW_commit> := c"commit"
   <KW_connect> := c"connect"
   <KW_constraint> := c"constraint"
   <KW_create> := c"create"
+  <KW_declare> := c"declare"
   <KW_delete> := c"delete"
   <KW_drop> := c"drop"
   <KW_from> := c"from"
@@ -63,9 +65,11 @@ GRAMMAR = """
   <KW_into> := c"into"
   <KW_insert> := c"insert"
   <KW_or> := c"or"
+  <KW_rename> := c"rename"
   <KW_replace> := c"replace"
   <KW_revoke> := c"revoke"
   <KW_rollback> := c"rollback"
+  <KW_truncate> := c"truncate"
   <KW_update> := c"update"
 
   # comments
@@ -105,6 +109,7 @@ GRAMMAR = """
   >object_type< := simple_object_type / complex_object_type
 
   # statements
+  anonymous_plsql_block := (KW_declare / KW_begin), complex_statement_ender
   comment_statement := KW_comment, simple_statement_ender
   commit_statement := KW_commit, simple_statement_ender
   connect_statement := KW_connect, WS+, identifier,
@@ -124,8 +129,11 @@ GRAMMAR = """
   grant_statement := KW_grant, simple_statement_ender
   insert_statement := KW_insert, WS+, KW_into, WS+, qualified_identifier,
       simple_statement_ender
+  rename_statement := KW_rename, WS+, identifier, simple_statement_ender
   revoke_statement := KW_revoke, simple_statement_ender
   rollback_statement := KW_rollback, simple_statement_ender
+  truncate_statement := KW_truncate, WS+, KW_table, WS+,
+      qualified_identifier, simple_statement_ender
   update_statement := KW_update, WS+, qualified_identifier,
       simple_statement_ender
 
@@ -134,7 +142,8 @@ GRAMMAR = """
       alter_object_statement / drop_object_statement / comment_statement /
       commit_statement / rollback_statement / grant_statement /
       revoke_statement / connect_statement / insert_statement /
-      update_statement / delete_statement
+      update_statement / delete_statement / rename_statement /
+      truncate_statement / anonymous_plsql_block
 
   file := (WS*, sql_statement)*, WS*
 

@@ -72,6 +72,10 @@ class AlterObjectStatement(ObjectStatement):
     action = "altered"
 
 
+class AnonymousPlsqlBlock(Statement):
+    message = "PL/SQL procedure successfully completed."
+
+
 class CommentStatement(Statement):
     message = "Comment created."
 
@@ -114,6 +118,13 @@ class InsertStatement(DMLStatement):
     action = "inserted"
 
 
+class RenameObjectStatement(ObjectStatement):
+    action = "renamed"
+
+    def __init__(self, sql, name):
+        super(RenameObjectStatement, self).__init__(sql, "object", name)
+
+
 class RevokeStatement(Statement):
     message = "Privilege(s) revoked."
 
@@ -123,6 +134,14 @@ class RollbackStatement(Statement):
 
     def Execute(self, cursor):
         cursor.connection.rollback()
+
+
+class TruncateObjectStatement(ObjectStatement):
+    action = "truncated"
+
+    def __init__(self, sql, owner, name):
+        super(TruncateObjectStatement, self).__init__(sql, "table", name,
+                owner)
 
 
 class UpdateStatement(DMLStatement):
