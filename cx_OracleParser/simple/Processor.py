@@ -12,6 +12,7 @@ class Processor(cx_Parser.DispatchProcessor):
     CommentStatement = Statements.CommentStatement
     CommitStatement = Statements.CommitStatement
     ConnectStatement = Statements.ConnectStatement
+    CreateConstraintStatement = Statements.CreateConstraintStatement
     CreateObjectStatement = Statements.CreateObjectStatement
     DeleteStatement = Statements.DeleteStatement
     DropObjectStatement = Statements.DropObjectStatement
@@ -55,7 +56,8 @@ class Processor(cx_Parser.DispatchProcessor):
         type = self.Dispatch(sql, children[3])
         if " " not in type:
             type += " constraint"
-        return self.CreateObjectStatement(sql[start:end], type, name, owner)
+        return self.CreateConstraintStatement(sql[start:end], type, owner,
+                name, tableName)
 
     def alter_object_statement(self, sql, tag, start, end, children):
         type = self.Dispatch(sql, children[0])

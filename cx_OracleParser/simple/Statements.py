@@ -109,6 +109,13 @@ class CreateObjectStatement(ObjectStatement):
                 self.type.upper(), self.action + " with", self.lineNumber - 1)
 
 
+class CreateConstraintStatement(CreateObjectStatement):
+
+    def __init__(self, sql, type, owner, name, tableName):
+        super(CreateConstraintStatement, self).__init__(sql, type, name, owner)
+        self.tableName = tableName
+
+
 class DropObjectStatement(ObjectStatement):
     action = "dropped"
 
