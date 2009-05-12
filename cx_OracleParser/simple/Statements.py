@@ -6,7 +6,7 @@ class Statement(object):
     message = None
 
     def __init__(self, sql):
-        self.sql = sql
+        self.sql = sql[:-1].strip()
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
@@ -27,7 +27,7 @@ class Statement(object):
 class ObjectStatement(Statement):
 
     def __init__(self, sql, type, name, owner = None):
-        self.sql = sql
+        super(ObjectStatement, self).__init__(sql)
         self.type = type
         self.name = name
         self.owner = owner
@@ -51,7 +51,7 @@ class ObjectStatement(Statement):
 class DMLStatement(ObjectStatement):
 
     def __init__(self, sql, owner, name):
-        self.sql = sql
+        super(ObjectStatement, self).__init__(sql)
         self.owner = owner
         self.name = name
 
