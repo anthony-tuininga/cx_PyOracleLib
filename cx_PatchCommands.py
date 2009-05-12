@@ -1,6 +1,8 @@
 """Module for use in patching databases by a number of means."""
 
+import cx_Exceptions
 import cx_Logging
+import cx_Oracle
 import cx_OracleEx
 import cx_OracleParser
 import datetime
@@ -9,8 +11,9 @@ import sys
 
 class Processor(object):
 
-    def __init__(self, connection):
+    def __init__(self, connection, onErrorContinue = False):
         self.connection = connection
+        self.onErrorContinue = onErrorContinue
 
     def _LogCommand(self, command):
         separator = "-" * 66
@@ -25,7 +28,7 @@ class Processor(object):
 
     def ProcessCommand(self, command):
         self._LogCommand(command)
-        command.Process(self.connection)
+        command.Process(self)
 
     def ProcessFile(self, fileName):
         name, extension = os.path.splitext(fileName)
@@ -62,7 +65,8 @@ class CommandBase(object):
 class ExecuteSQLCommands(CommandBase):
     extension = ".sql"
 
-    def Process(self, connection):
+    def Process(self, processor):
+        connection = processor.connection
         cursor = connection.cursor()
         cursor.execute("select user from dual")
         user, = cursor.fetchone()
@@ -79,7 +83,14 @@ class ExecuteSQLCommands(CommandBase):
                     cx_Logging.Trace("%s", statement.GetLogMessage(cursor))
                     parser.parser.processor.owner = statement.user
                 else:
-                    statement.Process(cursor)
+                    try:
+                        statement.Process(cursor)
+                    except cx_Exceptions.BaseException, error:
+                        cx_Logging.Error("Error at line %s",
+                                statement.lineNumber)
+                        if not processor.onErrorContinue:
+                            raise
+                        cx_Logging.Error("%s", error.message)
         except cx_OracleParser.ParsingFailed, value:
             cx_Logging.Error("Parsing failed at line %s (%s...)",
                     value.arguments["lineNumber"],
