@@ -341,6 +341,7 @@ class Exporter(Describer):
 
     def ExportObject(self, object):
         """Export the object into a new file."""
+        self.SetOwner(object.owner, object.type)
         if not self.exportLevel or self.splitRelated:
             ownerDir = self.currentOwner
             if self.suppressOwnerDir:
