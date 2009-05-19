@@ -19,7 +19,7 @@ GRAMMAR = """
   <COMMA> := ','
   <SLASH> := '/'
   <AT> := '@'
-  <CHAR> := [-A-Za-z0-9/*+=,.|()<>_:!%]
+  <CHAR> := [-A-Za-z0-9/*+=,.|()<>_:!%"]
   <token> := literal / CHAR+ / WS+
 
   # object type keywords
