@@ -6,8 +6,9 @@ import cx_OracleUtils
 class Statement(object):
     message = None
 
-    def __init__(self, sql):
-        self.sql = sql[:-1].strip()
+    def __init__(self, sql, lineNumber):
+        self.sql = sql
+        self.lineNumber = lineNumber
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
@@ -27,8 +28,8 @@ class Statement(object):
 
 class ObjectStatement(Statement):
 
-    def __init__(self, sql, type, name, owner = None):
-        super(ObjectStatement, self).__init__(sql)
+    def __init__(self, sql, lineNumber, type, name, owner = None):
+        super(ObjectStatement, self).__init__(sql, lineNumber)
         self.type = type
         self.name = name
         self.owner = owner
@@ -51,8 +52,8 @@ class ObjectStatement(Statement):
 
 class DMLStatement(ObjectStatement):
 
-    def __init__(self, sql, owner, name):
-        super(ObjectStatement, self).__init__(sql)
+    def __init__(self, sql, lineNumber, owner, name):
+        super(ObjectStatement, self).__init__(sql, lineNumber)
         self.owner = owner
         self.name = name
 
@@ -90,7 +91,8 @@ class CommitStatement(Statement):
 
 class ConnectStatement(Statement):
 
-    def __init__(self, user, password = None, dsn = None):
+    def __init__(self, sql, lineNumber, user, password = None, dsn = None):
+        super(ConnectStatement, self).__init__(sql, lineNumber)
         self.user = user
         self.password = password
         self.dsn = dsn
@@ -111,8 +113,9 @@ class CreateObjectStatement(ObjectStatement):
 
 class CreateConstraintStatement(CreateObjectStatement):
 
-    def __init__(self, sql, type, owner, name, tableName):
-        super(CreateConstraintStatement, self).__init__(sql, type, name, owner)
+    def __init__(self, sql, lineNumber, type, owner, name, tableName):
+        super(CreateConstraintStatement, self).__init__(sql, lineNumber, type,
+                name, owner)
         self.tableName = tableName
 
 
@@ -135,8 +138,9 @@ class InsertStatement(DMLStatement):
 class RenameObjectStatement(ObjectStatement):
     action = "renamed"
 
-    def __init__(self, sql, name):
-        super(RenameObjectStatement, self).__init__(sql, "object", name)
+    def __init__(self, sql, lineNumber, name):
+        super(RenameObjectStatement, self).__init__(sql, lineNumber, "object",
+                name)
 
 
 class RevokeStatement(Statement):
@@ -153,9 +157,9 @@ class RollbackStatement(Statement):
 class TruncateObjectStatement(ObjectStatement):
     action = "truncated"
 
-    def __init__(self, sql, owner, name):
-        super(TruncateObjectStatement, self).__init__(sql, "table", name,
-                owner)
+    def __init__(self, sql, lineNumber, owner, name):
+        super(TruncateObjectStatement, self).__init__(sql, lineNumber, "table",
+                name, owner)
 
 
 class UpdateStatement(DMLStatement):

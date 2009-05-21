@@ -50,7 +50,7 @@ class SimpleParser(Parser):
                         lineNumber = lineNumber,
                         remainingString = remainingString)
             statement, = results
-            statement.lineNumber = lineNumber
+            statement.lineNumber += lineNumber - 1
             lineNumber += len(string[:pos].splitlines())
             string = remainingString
             yield statement

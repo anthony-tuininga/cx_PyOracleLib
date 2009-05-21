@@ -71,7 +71,7 @@ class ExecuteSQLCommands(CommandBase):
         cursor.execute("select user from dual")
         user, = cursor.fetchone()
         parser = cx_OracleParser.SimpleParser()
-        sql = open(self.fileName).read().strip()
+        sql = open(self.fileName).read()
         connectStatementClass = parser.parser.processor.ConnectStatement
         try:
             for statement in parser.IterParse(sql, user):
