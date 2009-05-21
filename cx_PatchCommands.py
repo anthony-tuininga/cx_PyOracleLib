@@ -86,8 +86,12 @@ class ExecuteSQLCommands(CommandBase):
                     try:
                         statement.Process(cursor)
                     except cx_Exceptions.BaseException, error:
-                        cx_Logging.Error("Error at line %s",
-                                statement.lineNumber)
+                        lineNumber = statement.lineNumber
+                        if isinstance(error, cx_OracleEx.DatabaseException) \
+                                and error.dbErrorOffset is not None:
+                            offset = error.dbErrorOffset
+                            lineNumber += statement.sql[:offset].count("\n")
+                        cx_Logging.Error("Error at line %s", lineNumber)
                         if not processor.onErrorContinue:
                             raise
                         cx_Logging.Error("%s", error.message)

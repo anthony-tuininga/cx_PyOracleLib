@@ -164,6 +164,7 @@ class Cursor(cx_Oracle.Cursor):
 
 class DatabaseException(cx_Exceptions.BaseException):
     dbErrorCode = None
+    dbErrorOffset = None
 
     def __init__(self, excType, excValue, excTraceback, trimMessage = True):
         cx_Exceptions.BaseException.__init__(self)
@@ -172,6 +173,10 @@ class DatabaseException(cx_Exceptions.BaseException):
         error, = excValue.args
         if not isinstance(error, str):
             self.dbErrorCode = error.code
+            try:
+                self.dbErrorOffset = error.offset
+            except AttributeError:
+                pass
         if trimMessage and self.message.startswith("ORA-"):
             pos = self.message.find("ORA-", 1)
             if pos > 0:
