@@ -84,7 +84,7 @@ GRAMMAR = """
   literal := (string_literal / float_literal / integer_literal)
 
   # identifiers
-  unquoted_identifier := LETTER, [a-zA-Z0-9_$#]*
+  unquoted_identifier := LETTER, [a-zA-Z0-9_$#-]*
   quoted_identifier := NAME_DELIM, [a-zA-Z0-9_$#.]+, NAME_DELIM
   >identifier< := quoted_identifier / unquoted_identifier
   qualified_identifier := identifier, (PERIOD, identifier)?
