@@ -449,7 +449,8 @@ GRAMMAR = """
 
   # DML statements
   columns_list := LPAREN, WS*, qualified_identifier_list, WS*, RPAREN, WS*
-  values_clause := KW_values, WS*, paren_expression_list
+  values_clause := KW_values, WS*,
+      (paren_expression_list / qualified_identifier)
   update_columns_clause := qualified_identifier, WS*, '=', WS*, expression
   update_columns_clause_list := update_columns_clause,
       (WS*, COMMA, WS*, update_columns_clause)*
