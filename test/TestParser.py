@@ -10,9 +10,9 @@ options = parser.Parse()
 
 parser = cx_OracleParser.Parser()
 try:
-    result = parser.Parse(file(options.fileName).read().strip(), "dummy",
-            productionName = options.productionName)
-    print "Result:", result
+    for statement in parser.Parse(file(options.fileName).read(), "dummy",
+            productionName = options.productionName):
+        print statement
 except cx_OracleParser.ParsingFailed, value:
     print "Parsing failed at position:", value.arguments["pos"]
     print "Remaining string:", value.arguments["remainingString"]
