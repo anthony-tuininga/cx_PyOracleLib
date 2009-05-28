@@ -1,3 +1,40 @@
+Changes from 2.4 to 2.5
+ 1) Use exception classes rather than string exceptions everywhere.
+ 2) Added support for specifying "as sysdba" and "as sysoper" in the connection
+    string and set the necessary privileges when connecting.
+ 3) Added support for getting constant representations for binary data, CLOB
+    and BLOB values.
+ 4) Added support for Oracle context objects.
+ 5) Fixed support for interval data types.
+ 6) In cx_OracleParser, added a simple SQL parser and used that to replace the
+    module cx_SQL.
+ 7) In cx_OracleParser, added support for additional SQL statements or options
+    on existing statements.
+ 8) In cx_OracleObject, constraints on objects that have been dropped are now
+    ignored.
+ 9) In cx_OracleObject, trailing lines are no longer stripped from the source
+    that is returned from dba_source as wrapped code sometimes requires the
+    blank line in Oracle 10g as reported by Robert Ritchie.
+10) In cx_OracleObject, aded support for option --name-file which is the same
+    as --name except that the names are listed in the specified file, one per
+    line; roles are also included if the names refer to roles.
+11) In cx_OracleObject, always set the owner when an object is exported so
+    that referenced constraints are prefixed with connect statements as
+    needed.
+12) In cx_OracleEx, added method for getting the current date from the
+    database.
+13) In cx_OracleEx, added methods for performing simple insert, update and
+    delete statements based on the data passed into those methods.
+14) In cx_OracleEx, show the number of rows successfully processed before an
+    error occurs as requested by Gordon den Otter.
+15) Added module cx_PatchCommands which enables the use of the simple SQL
+    parser for processing SQL statements and reporting more useful information
+    than is reported by SQL*Plus.
+16) Dropped module cx_RecordSet which has been replaced by more advanced code
+    in the ceDatabase module in the cx_PyGenLib project.
+17) Dropped module cx_CursorCache which is not used and only contained a few
+    lines of code anyway.
+
 Changes from 2.3 to 2.4
  1) In cx_ExportData and cx_ImportData, use cx_Logging to output messages
     rather than write directly to stderr.

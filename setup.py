@@ -30,7 +30,7 @@ setup(
         description = "Set of Python modules for handling Oracle databases",
         license = "See LICENSE.txt",
         long_description = "Set of Python modules for handling Oracle " + \
-                "databases and used by a number of Computronix projects, " + \
+                "databases and used by a number of projects, " + \
                 "in particular the cx_OracleTools project",
         author = "Anthony Tuininga",
         author_email = "anthony.tuininga@gmail.com",
