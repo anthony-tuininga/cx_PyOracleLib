@@ -31,6 +31,7 @@ class Environment(object):
         self.connection = connection
         self.useDbaViews = False
         self.maxLongSize = None
+        self.wantViewColumns = False
         Utils.SetOptions(self, options)
         self.cursors = {}
         self.cachedObjects = {}

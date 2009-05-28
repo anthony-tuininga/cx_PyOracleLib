@@ -1118,10 +1118,34 @@ class View(ObjectWithTriggers, ObjectWithColumnPrivileges, ObjectWithComments):
     def __init__(self, environment, row):
         owner, name, self.text = row
         Object.__init__(self, environment, owner, name, "VIEW")
+        if environment.wantViewColumns:
+            self.__RetrieveColumns()
+        else:
+            self.columns = []
+
+    def __RetrieveColumns(self):
+        """Retrieve the columns for the view from the database."""
+        cursor, isPrepared = self.environment.Cursor("ViewColumns")
+        if not isPrepared:
+            cursor.prepare("""
+                    select column_name
+                    from %s_tab_columns
+                    where owner = :owner
+                      and table_name = :name
+                    order by column_id""" % self.environment.ViewPrefix())
+        cursor.execute(None,
+                owner = self.owner,
+                name = self.name)
+        self.columns = [n for n, in cursor]
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
-        print >> outFile, "create or replace view", self.nameForOutput, "as"
+        print >> outFile, "create or replace view", self.nameForOutput,
+        if self.columns:
+            print >> outFile, "("
+            print >> outFile, "  " + ",\n  ".join(self.columns)
+            print >> outFile, ")",
+        print >> outFile, "as"
         print >> outFile, self.text.strip() + ";"
         print >> outFile
 

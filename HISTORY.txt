@@ -21,18 +21,20 @@ Changes from 2.4 to 2.5
 11) In cx_OracleObject, always set the owner when an object is exported so
     that referenced constraints are prefixed with connect statements as
     needed.
-12) In cx_OracleEx, added method for getting the current date from the
+12) In cx_OracleObject, added support when describing views to include the
+    column names in the SQL for the view.
+13) In cx_OracleEx, added method for getting the current date from the
     database.
-13) In cx_OracleEx, added methods for performing simple insert, update and
+14) In cx_OracleEx, added methods for performing simple insert, update and
     delete statements based on the data passed into those methods.
-14) In cx_OracleEx, show the number of rows successfully processed before an
+15) In cx_OracleEx, show the number of rows successfully processed before an
     error occurs as requested by Gordon den Otter.
-15) Added module cx_PatchCommands which enables the use of the simple SQL
+16) Added module cx_PatchCommands which enables the use of the simple SQL
     parser for processing SQL statements and reporting more useful information
     than is reported by SQL*Plus.
-16) Dropped module cx_RecordSet which has been replaced by more advanced code
+17) Dropped module cx_RecordSet which has been replaced by more advanced code
     in the ceDatabase module in the cx_PyGenLib project.
-17) Dropped module cx_CursorCache which is not used and only contained a few
+18) Dropped module cx_CursorCache which is not used and only contained a few
     lines of code anyway.
 
 Changes from 2.3 to 2.4
