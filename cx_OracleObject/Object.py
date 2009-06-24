@@ -1082,7 +1082,9 @@ class User(UserOrRole):
         self.defaultTablespace = environment.NameForOutput(defaultTablespace)
         self.temporaryTablespace = \
                 environment.NameForOutput(temporaryTablespace)
-        self.__RetrieveTablespaceQuotas()
+        self.quotas = []
+        if environment.wantQuotas:
+            self.__RetrieveTablespaceQuotas()
 
     def __RetrieveTablespaceQuotas(self):
         """Retrieve the tablespace quotas for the user from the database."""
