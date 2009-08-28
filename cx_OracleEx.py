@@ -72,6 +72,11 @@ class Connection(cx_Oracle.Connection):
         except:
             return False
 
+    def OutputStringsAsUnicode(self, cursor, name, defaultType, size,
+            precision, scale):
+        if defaultType in (cx_Oracle.STRING, cx_Oracle.FIXED_CHAR):
+            return cursor.var(unicode, size, cursor.arraysize)
+
     def UpdateRow(self, tableName, *whereNames, **args):
         """Update a row in the table."""
         setClauses = ["%s = :%s" % (n, n) for n in args \
