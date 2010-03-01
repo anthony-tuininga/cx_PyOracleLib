@@ -10,6 +10,7 @@ class Connection(cx_Oracle.Connection):
     BINARY = cx_Oracle.BINARY
     BLOB = cx_Oracle.BLOB
     CLOB = cx_Oracle.CLOB
+    NCLOB = cx_Oracle.NCLOB
     DATETIME = cx_Oracle.DATETIME
     FIXED_CHAR = cx_Oracle.FIXED_CHAR
     LONG_BINARY = cx_Oracle.LONG_BINARY
@@ -17,8 +18,7 @@ class Connection(cx_Oracle.Connection):
     NUMBER = cx_Oracle.NUMBER
     ROWID = cx_Oracle.ROWID
     STRING = cx_Oracle.STRING
-# uncomment this line when Oracle 8i support is no longer needed
-#    TIMESTAMP = cx_Oracle.TIMESTAMP
+    TIMESTAMP = cx_Oracle.TIMESTAMP
     Date = cx_Oracle.Date
     Timestamp = cx_Oracle.Timestamp
     trimMessage = logSql = True
