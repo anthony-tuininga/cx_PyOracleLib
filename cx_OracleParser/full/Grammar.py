@@ -449,6 +449,7 @@ GRAMMAR = """
 
   # DML statements
   columns_list := LPAREN, WS*, qualified_identifier_list, WS*, RPAREN, WS*
+  expression_columns_list := LPAREN, WS*, expression_list, WS*, RPAREN, WS*
   values_clause := KW_values, WS*,
       (paren_expression_list / qualified_identifier)
   update_columns_clause := qualified_identifier, WS*, '=', WS*, expression
@@ -653,7 +654,7 @@ GRAMMAR = """
       expression, WS*, RPAREN, initially_deferred_option?,
       simple_statement_ender
   create_index_statement := KW_create, WS+, (KW_unique, WS+)?, KW_index, WS+,
-      identifier, WS+, KW_on, WS+, identifier, WS*, columns_list,
+      identifier, WS+, KW_on, WS+, identifier, WS*, expression_columns_list,
       storage_clause*, simple_statement_ender
   create_sequence_statement := KW_create, WS+, KW_sequence, WS+, identifier,
       simple_statement_ender
