@@ -500,7 +500,8 @@ class Index(ObjectWithStorage):
         owner, name, self.tableName, self.tablespaceName, uniqueness, \
                 self.initialExtent, self.nextExtent, self.minExtents, \
                 self.maxExtents, self.percentIncrease, indexType, \
-                partitioned, temporary, compressed, self.prefixLength = row
+                partitioned, temporary, compressed, self.prefixLength, \
+                self.indexTypeOwner, self.indexTypeName, self.parameters = row
         Object.__init__(self, environment, owner, name, "INDEX")
         self.typeModifier = None
         if uniqueness == "UNIQUE":
@@ -630,6 +631,12 @@ class Index(ObjectWithStorage):
         self.AddStorageClauses(clauses, wantTablespace, wantStorage)
         if self.partitioned:
             self.__AddPartitionClauses(clauses, wantTablespace, wantStorage)
+        if self.indexTypeOwner is not None:
+            owner = self.environment.NameForOutput(self.indexTypeOwner)
+            name = self.environment.NameForOutput(self.indexTypeName)
+            clauses.append("indextype is %s.%s" % (owner, name))
+            if self.parameters is not None:
+                clauses.append("parameters ('%s')" % self.parameters)
         clauses = Utils.ClausesForOutput(clauses, " ", "  ", "")
         print >> outFile, ")%s;" % clauses
         print >> outFile

@@ -50,11 +50,15 @@ INDEXES_ANY = """
           o.partitioned,
           o.temporary,
           o.compression,
-          o.prefix_length
+          o.prefix_length,
+          o.ityp_owner,
+          o.ityp_name,
+          o.parameters
         from %(p_ViewPrefix)s_indexes o
         %(p_WhereClause)s
           and o.index_type in ('NORMAL', 'NORMAL/REV', 'IOT - TOP', 'BITMAP',
-              'FUNCTION-BASED NORMAL', 'FUNCTION-BASED NORMAL/REV')"""
+              'FUNCTION-BASED NORMAL', 'FUNCTION-BASED NORMAL/REV',
+              'DOMAIN')"""
 
 INDEXES = INDEXES_ANY + """
         and not exists
