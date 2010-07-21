@@ -154,6 +154,7 @@ TABLES = """
           o.iot_type
         from %(p_ViewPrefix)s_tables o
         %(p_WhereClause)s
+          and secondary = 'N'
         order by o.owner, o.table_name"""
 
 TABLE_PARTITIONS = """
