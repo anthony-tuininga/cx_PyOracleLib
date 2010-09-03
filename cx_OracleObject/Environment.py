@@ -197,6 +197,11 @@ class Environment(object):
         if row is not None:
             return row[0]
 
+    def ServerVersion(self):
+        """Return a 2-tuple of the major and minor version of the server."""
+        versionParts = [int(s) for s in self.connection.version.split(".")]
+        return tuple(versionParts[:2])
+
     def ViewPrefix(self):
         """Return the view prefix for use in the queries."""
         if self.useDbaViews:

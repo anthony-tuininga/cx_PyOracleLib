@@ -765,6 +765,11 @@ class Sequence(ObjectWithPrivileges):
         owner, name, self.minValue, self.maxValue, self.incrementBy, \
                 self.cycleFlag, self.orderFlag, self.cacheSize, \
                 self.lastNumber = row
+        if environment.ServerVersion() < (11, 2):
+            numDigits = 27
+        else:
+            numDigits = 28
+        self.maxMaxValue = "9" * numDigits
         Object.__init__(self, environment, owner, name, "SEQUENCE")
 
     def Export(self, outFile, includeValue):
@@ -774,7 +779,7 @@ class Sequence(ObjectWithPrivileges):
             options.append("start with %s" % self.lastNumber)
         if self.minValue != "1":
             options.append("minvalue %s" % self.minValue)
-        if self.maxValue != "9" * 27:
+        if self.maxValue != self.maxMaxValue:
             options.append("maxvalue %s" % self.maxValue)
         if self.incrementBy != "1":
             options.append("increment by %s" % self.incrementBy)
