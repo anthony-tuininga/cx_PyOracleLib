@@ -15,26 +15,32 @@ Changes from 2.4 to 2.5
  9) In cx_OracleObject, trailing lines are no longer stripped from the source
     that is returned from dba_source as wrapped code sometimes requires the
     blank line in Oracle 10g as reported by Robert Ritchie.
-10) In cx_OracleObject, aded support for option --name-file which is the same
+10) In cx_OracleObject, added support for option --name-file which is the same
     as --name except that the names are listed in the specified file, one per
-    line; roles are also included if the names refer to roles.
+    line; roles can also be included if the names refer to roles.
 11) In cx_OracleObject, always set the owner when an object is exported so
     that referenced constraints are prefixed with connect statements as
     needed.
 12) In cx_OracleObject, added support when describing views to include the
     column names in the SQL for the view.
-13) In cx_OracleEx, added method for getting the current date from the
+13) In cx_OracleObject, added support for domain indexes.
+14) In cx_OracleObject, added support for Oracle 11.2.
+15) In cx_OracleObject, added support for using flashback queries when
+    performing describes, either by timestamp or by SCN.
+16) In cx_OracleEx, added method for getting the current date from the
     database.
-14) In cx_OracleEx, added methods for performing simple insert, update and
+17) In cx_OracleEx, added methods for performing simple insert, update and
     delete statements based on the data passed into those methods.
-15) In cx_OracleEx, show the number of rows successfully processed before an
+18) In cx_OracleEx, show the number of rows successfully processed before an
     error occurs as requested by Gordon den Otter.
-16) Added module cx_PatchCommands which enables the use of the simple SQL
+19) In cx_OracleEx, added method that can be used as an output type handler
+    for cx_Oracle that returns all strings as Unicode strings.
+20) Added module cx_PatchCommands which enables the use of the simple SQL
     parser for processing SQL statements and reporting more useful information
     than is reported by SQL*Plus.
-17) Dropped module cx_RecordSet which has been replaced by more advanced code
+21) Dropped module cx_RecordSet which has been replaced by more advanced code
     in the ceDatabase module in the cx_PyGenLib project.
-18) Dropped module cx_CursorCache which is not used and only contained a few
+22) Dropped module cx_CursorCache which is not used and only contained a few
     lines of code anyway.
 
 Changes from 2.3 to 2.4
