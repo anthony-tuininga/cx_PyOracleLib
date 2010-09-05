@@ -33,10 +33,22 @@ class Environment(object):
         self.maxLongSize = None
         self.wantViewColumns = False
         self.wantQuotas = True
+        self.asOfTimestamp = None
+        self.asOfScn = None
         Utils.SetOptions(self, options)
         self.cursors = {}
         self.cachedObjects = {}
         self.namesForOutput = {}
+        if self.asOfTimestamp is not None:
+            cursor = connection.cursor()
+            cursor.execute("""
+                    begin
+                        dbms_flashback.enable_at_time(%s);
+                    end;""" % self.asOfTimestamp)
+        elif self.asOfScn is not None:
+            cursor = connection.cursor()
+            cursor.callproc("dbms_flashback.enable_at_system_change_number",
+                    (self.asOfScn,))
 
     def CacheObject(self, obj):
         """Cache the object for later retrieval."""
