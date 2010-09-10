@@ -34,7 +34,7 @@ setup(
                 "in particular the cx_OracleTools project",
         author = "Anthony Tuininga",
         author_email = "anthony.tuininga@gmail.com",
-        url = "http://starship.python.net/crew/atuining",
+        url = "http://cx-pyoraclelib.sourceforge.net",
         py_modules = modules,
         packages = packages)
 
