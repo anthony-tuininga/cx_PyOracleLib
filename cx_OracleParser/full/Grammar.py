@@ -626,7 +626,8 @@ GRAMMAR = """
       (WS+, identifier)?, complex_statement_ender
   column_clause := identifier, WS+, data_type,
       (WS+, KW_default, WS+, expression)?, (WS+, KW_not, WS+, KW_null)?
-  column_clause_list := column_clause, (WS*, COMMA, WS*, column_clause)*
+  column_clause_list := column_clause,
+      (WS*, COMMA, WS*, (embedded_primary_key_constraint / column_clause))*
   global_temp_clause := KW_on, WS+, KW_commit, WS+, (KW_delete / KW_preserve),
       WS+, KW_rows
   storage_clause := (KW_tablespace, WS+, identifier) /
@@ -646,6 +647,8 @@ GRAMMAR = """
       KW_add, WS+, KW_constraint, WS+, identifier, WS+
   primary_key_constraint := constraint_common_clause, KW_primary, WS+, KW_key,
       WS*, columns_list, indexed_constraint_option*, simple_statement_ender
+  embedded_primary_key_constraint := KW_constraint, WS+, identifier, WS+,
+      KW_primary, WS+, KW_key, WS+, columns_list, indexed_constraint_option*
   unique_constraint := constraint_common_clause, KW_unique, WS*, columns_list,
       indexed_constraint_option*, simple_statement_ender
   cascade_clause := KW_on, WS+, KW_delete, WS+,
