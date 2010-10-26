@@ -151,6 +151,7 @@ GRAMMAR = """
   KW_option := c"option"
   KW_or := c"or"
   KW_order := c"order"
+  KW_organization := c"organization"
   KW_out := c"out"
   KW_outer := c"outer"
   KW_outline := c"outline"
@@ -629,7 +630,8 @@ GRAMMAR = """
   global_temp_clause := KW_on, WS+, KW_commit, WS+, (KW_delete / KW_preserve),
       WS+, KW_rows
   storage_clause := (KW_tablespace, WS+, identifier) /
-      (KW_disable, WS+, KW_storage, WS+, KW_in, WS+, KW_row)
+      (KW_disable, WS+, KW_storage, WS+, KW_in, WS+, KW_row) /
+      (KW_organization, WS+, KW_index)
   lob_clause := KW_lob, WS*, LPAREN, WS*, identifier, WS*, RPAREN, WS*,
       KW_store, WS+, KW_as, WS*, LPAREN, (WS*, storage_clause)+, WS*, RPAREN
   initially_deferred_option := WS*, KW_initially, WS+, KW_deferred
