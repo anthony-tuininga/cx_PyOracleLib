@@ -256,11 +256,13 @@ GRAMMAR = """
   case_header := KW_case, (WS+, ?-KW_when, expression)?
   case_expression := case_header, WS+, case_clause, (WS+, case_clause)*, WS+,
       (KW_else, WS+, expression, WS+)?, KW_end
+  cast_expression := KW_cast, WS*, LPAREN, WS*, expression, WS+, KW_as, WS+,
+      data_type, WS*, RPAREN
   paren_expression := LPAREN, WS*, expression, WS*, RPAREN
   exists_expression := KW_exists, WS+, subquery
-  >simple_expression< := literal / count_expression / function_expression /
-      paren_expression_list / paren_expression / case_expression / subquery /
-      exists_expression / prior_expression
+  >simple_expression< := literal / count_expression / cast_expression /
+      function_expression / paren_expression_list / paren_expression /
+      case_expression / subquery / exists_expression / prior_expression
   unary_operator := (KW_not / SIGN), WS*
   post_operator := WS+, KW_is, WS+, (KW_not, WS+)?, KW_null
   expression := (identifier, WS*, PLSQL_KW, WS*)?, unary_operator?,
