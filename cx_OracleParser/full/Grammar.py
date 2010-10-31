@@ -1,7 +1,5 @@
 """Grammar for parsing SQL as defined by Oracle."""
 
-__all__ = [ "GRAMMAR" ]
-
 GRAMMAR = """
 
   # tokens
