@@ -9,6 +9,7 @@ class Statement(object):
     def __init__(self, sql, lineNumber):
         self.sql = sql
         self.lineNumber = lineNumber
+        self.terminator = ";\n\n"
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
@@ -24,6 +25,9 @@ class Statement(object):
         message = self.GetLogMessage(cursor)
         if message is not None:
             cx_Logging.Trace("%s", message)
+
+    def Sql(self):
+        return self.sql + self.terminator
 
 
 class ObjectStatement(Statement):
@@ -103,6 +107,11 @@ class ConnectStatement(Statement):
 
 class CreateObjectStatement(ObjectStatement):
     action = "created"
+
+    def __init__(self, *args, **kwargs):
+        super(CreateObjectStatement, self).__init__(*args, **kwargs)
+        if self.type in ("package", "package body", "trigger", "type"):
+            self.terminator = "\n/\n\n"
 
     def Execute(self, cursor):
         super(ObjectStatement, self).Execute(cursor)
