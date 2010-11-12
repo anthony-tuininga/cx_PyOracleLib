@@ -46,6 +46,7 @@ GRAMMAR = """
   KW_unique := c"unique"
   KW_user := c"user"
   KW_view := c"view"
+  KW_wrapped := c"wrapped"
 
   # keywords
   <KW_add> := c"add"
@@ -92,9 +93,8 @@ GRAMMAR = """
   # common clauses
   <simple_statement_ender> := token*, SEMICOLON
   <complex_statement_terminator> := WS+, SLASH
-  <complex_statement_ender> := simple_statement_ender,
-      (?-complex_statement_terminator, simple_statement_ender)*,
-      complex_statement_terminator
+  <complex_statement_ender> := (?-complex_statement_terminator,
+        (token / SEMICOLON))*, complex_statement_terminator
 
   # object types
   >index_type< := ((KW_bitmap / KW_unique), WS+)?, KW_index
