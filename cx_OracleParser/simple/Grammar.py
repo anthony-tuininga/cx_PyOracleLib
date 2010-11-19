@@ -4,12 +4,12 @@ GRAMMAR = """
 
   # tokens
   <DASHES> := '--'
-  <WS> := [ \t\n] / comment
+  <WS> := [ \t\r\n] / comment
   <STRING_DELIM> := "'"
   <NAME_DELIM> := '"'
   <COMMENT_START> := '/*'
   <COMMENT_END> := '*/'
-  <CR> := '\n'
+  <CR> := '\r\n' / '\n' / '\r'
   <SEMICOLON> := ';'
   <SIGN> := [+-]
   <DIGIT> := [0-9]
@@ -92,7 +92,7 @@ GRAMMAR = """
 
   # common clauses
   <simple_statement_ender> := token*, SEMICOLON
-  <complex_statement_terminator> := WS+, SLASH
+  <complex_statement_terminator> := CR, WS*, SLASH, (?-CR, WS)*, CR
   <complex_statement_ender> := (?-complex_statement_terminator,
         (token / SEMICOLON))*, complex_statement_terminator
 
