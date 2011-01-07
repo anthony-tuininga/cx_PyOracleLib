@@ -69,9 +69,12 @@ class DMLStatement(ObjectStatement):
         modifier = "row"
         if rowsAffected != 1:
             modifier = "rows"
-        return "%s %s %s in %s.%s." % \
-                (self.action.capitalize(), rowsAffected, modifier, self.owner,
-                 self.name)
+        if self.owner is None and self.name is None:
+            objectName = "anonymous view"
+        else:
+            objectName = "%s.%s" % (self.owner, self.name)
+        return "%s %s %s in %s." % \
+                (self.action.capitalize(), rowsAffected, modifier, objectName)
 
 
 class AlterObjectStatement(ObjectStatement):

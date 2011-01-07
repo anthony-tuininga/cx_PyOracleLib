@@ -21,6 +21,7 @@ GRAMMAR = """
   <AT> := '@'
   <CHAR> := [-A-Za-z0-9/*+=,.|()<>_:!%"@$#]
   <token> := literal / CHAR+ / WS+
+  <LPAREN> := '('
 
   # object type keywords
   KW_bitmap := c"bitmap"
@@ -134,7 +135,7 @@ GRAMMAR = """
   rollback_statement := KW_rollback, simple_statement_ender
   truncate_statement := KW_truncate, WS+, KW_table, WS+,
       qualified_identifier, simple_statement_ender
-  update_statement := KW_update, WS+, qualified_identifier,
+  update_statement := KW_update, WS+, (qualified_identifier / LPAREN),
       simple_statement_ender
 
   # all possible statements

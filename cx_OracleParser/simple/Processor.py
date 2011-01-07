@@ -133,7 +133,10 @@ class Processor(cx_Parser.DispatchProcessor):
         return sql[start:end].upper()
 
     def update_statement(self, sql, tag, start, end, children):
-        owner, name = self.Dispatch(sql, children[0])
+        if len(children) > 0:
+            owner, name = self.Dispatch(sql, children[0])
+        else:
+            owner = name = None
         return self._statement_obj(self.UpdateStatement, sql, start, end,
                 owner, name)
 
