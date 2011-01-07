@@ -33,7 +33,10 @@ class Processor(cx_Parser.DispatchProcessor):
 
     def _statement_obj(self, cls, sql, start, end, *args):
         lineNumber = sql[:start].count("\n") + 1
-        return cls(sql[start:end - 1].strip(), lineNumber, *args)
+        sql = sql[start:end - 1].strip()
+        if sql.endswith("/"):
+            sql = sql[:-1].strip()
+        return cls(sql, lineNumber, *args)
 
     def anonymous_plsql_block(self, sql, tag, start, end, children):
         return self._statement_obj(self.AnonymousPlsqlBlock, sql, start, end)
