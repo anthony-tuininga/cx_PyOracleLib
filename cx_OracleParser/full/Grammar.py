@@ -51,6 +51,7 @@ GRAMMAR = """
   KW_bulk := c"bulk"
   KW_by := c"by"
   KW_byte := c"byte"
+  KW_cache := c"cache"
   KW_cascade := c"cascade"
   KW_case := c"case"
   KW_cast := c"cast"
@@ -138,6 +139,7 @@ GRAMMAR = """
   KW_merge := c"merge"
   KW_minus := c"minus"
   KW_mod := c"mod"
+  KW_nocache := c"nocache"
   KW_nocopy := c"nocopy"
   KW_not := c"not"
   KW_null := c"null"
@@ -662,6 +664,7 @@ GRAMMAR = """
       identifier, WS+, KW_on, WS+, identifier, WS*, expression_columns_list,
       storage_clause*, simple_statement_ender
   create_sequence_statement := KW_create, WS+, KW_sequence, WS+, identifier,
+      ((WS+, KW_cache, WS+, DIGIT+) / (WS+, KW_nocache))?,
       simple_statement_ender
   create_synonym_statement := KW_create, WS+, (KW_public, WS+)?, KW_synonym,
       WS+, identifier, WS+, KW_for, WS+, qualified_identifier,
