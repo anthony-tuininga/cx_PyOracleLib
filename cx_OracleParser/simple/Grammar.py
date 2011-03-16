@@ -75,7 +75,7 @@ GRAMMAR = """
   <KW_update> := c"update"
 
   # comments
-  dash_comment := DASHES, -CR+, CR
+  dash_comment := DASHES, -CR*, CR
   slash_comment := COMMENT_START, -COMMENT_END*, COMMENT_END
   comment := (dash_comment / slash_comment)
 

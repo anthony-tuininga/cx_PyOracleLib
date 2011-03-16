@@ -227,7 +227,7 @@ GRAMMAR = """
   KW_write := c"write"
 
   # comments
-  dash_comment := DASHES, -CR+, CR
+  dash_comment := DASHES, -CR*, CR
   slash_comment := COMMENT_START, -COMMENT_END*, COMMENT_END
   comment := (dash_comment / slash_comment)
 
