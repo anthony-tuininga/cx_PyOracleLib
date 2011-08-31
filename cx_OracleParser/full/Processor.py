@@ -1,5 +1,6 @@
 """Module for processing dependencies in SQL."""
 
+import cx_Exceptions
 import cx_Parser
 
 import Statements
@@ -125,7 +126,7 @@ class Processor(cx_Parser.DispatchProcessor):
         else:
             package = self.__directory.get((self.owner, objectName))
             if package is None:
-                raise "Missing header for package '%s'" % objectName
+                raise MissingPackageHeader(objectName = objectName)
             for identifier in package.identifiers:
                 self.__AddQualifiedIdentifier(identifier)
             obj = Statements.PackageBody(sql[start:end], self.__directory,
@@ -372,4 +373,8 @@ class Processor(cx_Parser.DispatchProcessor):
     def update_statement(self, sql, tag, start, end, children):
         childTag, childValue = self.DispatchList(sql, children)[1]
         self.__AddReference(childValue)
+
+
+class MissingPackageHeader(cx_Exceptions.BaseException):
+    message = "Missing header for package '%(objectName)s'"
 
