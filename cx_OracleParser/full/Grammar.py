@@ -279,7 +279,7 @@ GRAMMAR = """
   # select statement
   select_keyword := (KW_from / KW_bulk / KW_cross / KW_into / KW_union /
       KW_minus / KW_intersect / KW_left / KW_join / KW_where / KW_start /
-      KW_on / KW_for), WS+
+      KW_on / KW_for / KW_group), WS+
   select_clause := expression, (WS+, ?-select_keyword, WS*, identifier)?
   select_clause_list := select_clause,
       (WS*, COMMA, WS*, select_clause)*
