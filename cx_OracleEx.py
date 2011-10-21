@@ -90,6 +90,24 @@ class Connection(cx_Oracle.Connection):
 
 class Cursor(cx_Oracle.Cursor):
 
+    def blob(self, _value):
+        """Return a BLOB variable containing the given value."""
+        var = self.var(self.connection.BLOB)
+        var.setvalue(0, _value)
+        return var
+
+    def clob(self, _value):
+        """Return a CLOB variable containing the given value."""
+        var = self.var(self.connection.CLOB)
+        var.setvalue(0, _value)
+        return var
+
+    def nclob(self, _value):
+        """Return a NCLOB variable containing the given value."""
+        var = self.var(self.connection.NCLOB)
+        var.setvalue(0, _value)
+        return var
+
     def execute(self, _sql, _args = None, **_kwargs):
         """Wrap the execute so that unhandled exceptions are handled."""
         if _args is None:
