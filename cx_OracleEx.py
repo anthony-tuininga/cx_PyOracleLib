@@ -102,12 +102,6 @@ class Cursor(cx_Oracle.Cursor):
         var.setvalue(0, _value)
         return var
 
-    def nclob(self, _value):
-        """Return a NCLOB variable containing the given value."""
-        var = self.var(self.connection.NCLOB)
-        var.setvalue(0, _value)
-        return var
-
     def execute(self, _sql, _args = None, **_kwargs):
         """Wrap the execute so that unhandled exceptions are handled."""
         if _args is None:
@@ -183,6 +177,12 @@ class Cursor(cx_Oracle.Cursor):
             for row in _args:
                 exc.details.append(str(row))
             raise exc
+
+    def nclob(self, _value):
+        """Return a NCLOB variable containing the given value."""
+        var = self.var(self.connection.NCLOB)
+        var.setvalue(0, _value)
+        return var
 
 
 class DatabaseException(cx_Exceptions.BaseException):
