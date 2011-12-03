@@ -47,7 +47,7 @@ class ObjectStatement(Statement):
                  self.type.upper())
 
     def GetLogMessage(self, cursor):
-        if self.owner is None:
+        if self.owner is None or self.type in ("user", "public synonym"):
             return "%s %s %s." % \
                     (self.type.capitalize(), self.name, self.action)
         return "%s %s.%s %s." % \
