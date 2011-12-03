@@ -115,12 +115,13 @@ class CreateObjectStatement(ObjectStatement):
         super(CreateObjectStatement, self).__init__(*args, **kwargs)
         if self.type in ("package", "package body", "trigger", "type"):
             self.terminator = "\n/\n\n"
-            lines = self.sql.splitlines()
-            if lines[0].endswith("wrapped") and len(lines[-1]) == 72:
-                self.terminator = "\n" + self.terminator
 
     def Execute(self, cursor):
-        super(ObjectStatement, self).Execute(cursor)
+        sql = self.sql
+        lines = sql.splitlines()
+        if lines[0].endswith("wrapped"):
+            sql = sql + "\n"
+        cursor.execute(sql)
         cursor = cx_OracleUtils.PrepareErrorsCursor(cursor.connection)
         cx_OracleUtils.CheckForErrors(cursor, self.owner, self.name,
                 self.type.upper(), self.action + " with", self.lineNumber - 1)
