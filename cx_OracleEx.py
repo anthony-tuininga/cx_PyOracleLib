@@ -172,6 +172,8 @@ class Cursor(cx_Oracle.Cursor):
         except:
             exc = self.connection.ExceptionHandler(*sys.exc_info())
             exc.details.append("SQL: %s" % _sql or self.statement)
+            if self.rowcount > -1 and self.rowcount < len(_args):
+                exc.details.append("FAILED ROW: %s" % (_args[self.rowcount],))
             exc.details.append("ROWS (%s, %s before error):" % \
                     (len(_args), self.rowcount))
             for row in _args:
