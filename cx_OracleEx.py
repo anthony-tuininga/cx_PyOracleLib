@@ -177,7 +177,7 @@ class Cursor(cx_Oracle.Cursor):
             exc.details.append("ROWS (%s, %s before error):" % \
                     (len(_args), self.rowcount))
             for row in _args:
-                exc.details.append(str(row))
+                exc.details.append("    %s" % (row,))
             raise exc
 
     def nclob(self, _value):
