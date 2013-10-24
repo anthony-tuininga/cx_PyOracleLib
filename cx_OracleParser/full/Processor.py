@@ -359,6 +359,8 @@ class Processor(cx_Parser.DispatchProcessor):
         childTag, childValue = results[1]
         self.__AddIdentifier(childValue)
         childTag, childValue = results[-1]
+        if childTag == "range_clause":
+            childTag, childValue = results[-2]
         self.__AddReference(childValue)
 
     def unique_constraint(self, sql, tag, start, end, children):

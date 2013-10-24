@@ -170,6 +170,7 @@ GRAMMAR = """
   KW_public := c"public"
   KW_query := c"query"
   KW_raise := c"raise"
+  KW_range := c"range"
   KW_read := c"read"
   KW_record := c"record"
   KW_ref := c"ref"
@@ -332,12 +333,14 @@ GRAMMAR = """
       return_clause, (WS+, KW_pipelined)?
   cursor_definition := KW_cursor, WS+, common_definition, WS+,
       (KW_is / KW_as), WS+, select_statement
+  range_clause := KW_range, WS+, integer_literal, PERIOD, PERIOD,
+      integer_literal
 
   # PL/SQL declarations
   simple_declaration := ?-KW_begin, identifier, WS+, (KW_constant, WS+)?,
       data_type, (WS*, PLSQL_EQ, WS*, expression)?
   subtype_declaration := KW_subtype, WS+, identifier, WS+, KW_is, WS+,
-      qualified_identifier
+      qualified_identifier, (WS+, range_clause)?
   record_item_list := simple_declaration,
       (WS*, COMMA, WS*, simple_declaration)*
   record_declaration := KW_type, WS+, identifier, WS+, KW_is, WS+,
@@ -696,6 +699,10 @@ GRAMMAR = """
   create_context_statement := create_or_replace_clause, KW_context, WS+,
       identifier, WS+, KW_using, WS+, qualified_identifier,
       (WS+, context_statement_option)?, simple_statement_ender
+  create_procedure_statement := create_or_replace_clause, procedure_definition,
+      procedure_body, complex_statement_ender
+  create_function_statement := create_or_replace_clause, function_definition,
+      procedure_body, complex_statement_ender
 
   # SQL statements
   >sql_statement< := insert_statement / update_statement / delete_statement /
@@ -706,7 +713,8 @@ GRAMMAR = """
       grant_statement / commit_statement / rollback_statement /
       create_package_statement / create_user_statement /
       create_role_statement / create_type_statement /
-      create_trigger_statement / create_context_statement
+      create_trigger_statement / create_context_statement /
+      create_procedure_statement / create_function_statement
 
   # file
   file := (WS*, sql_statement)*, WS*
