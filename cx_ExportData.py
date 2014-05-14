@@ -55,7 +55,7 @@ class Exporter:
         for stringRep in ("BINARY", "STRING", "ROWID", "FIXED_CHAR"):
             if getattr(cx_Oracle, stringRep) == dataType:
                 return "%s,%d" % (stringRep, displaySize)
-        for stringRep in ("BLOB", "CLOB", "DATETIME", "LONG_BINARY",
+        for stringRep in ("BLOB", "CLOB", "NCLOB", "DATETIME", "LONG_BINARY",
                 "LONG_STRING", "TIMESTAMP"):
             if getattr(cx_Oracle, stringRep) == dataType:
                 return stringRep
