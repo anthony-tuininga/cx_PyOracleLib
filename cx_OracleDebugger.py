@@ -1,7 +1,5 @@
 """Return messages from a DBMS pipe."""
 
-from __future__ import generators
-
 import cx_Exceptions
 import cx_Logging
 import cx_Oracle

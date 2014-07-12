@@ -1,3 +1,3 @@
-from Environment import *
-from Describer import *
-from Utils import *
+from .Environment import *
+from .Describer import *
+from .Utils import *

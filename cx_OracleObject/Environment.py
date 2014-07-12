@@ -2,9 +2,9 @@
 
 import cx_Exceptions
 
-import Object
-import Statements
-import Utils
+from . import Object
+from . import Statements
+from . import Utils
 
 __all__ = [ "Environment" ]
 

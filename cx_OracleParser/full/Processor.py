@@ -3,7 +3,7 @@
 import cx_Exceptions
 import cx_Parser
 
-import Statements
+from . import Statements
 
 __all__ = [ "Processor" ]
 
@@ -58,7 +58,7 @@ class Processor(cx_Parser.DispatchProcessor):
 
     def __ExternalReferences(self):
         """Return a sorted list of external references."""
-        childValues = self.__externalReferences.keys()
+        childValues = list(self.__externalReferences.keys())
         childValues.sort()
         return childValues
 
@@ -68,7 +68,7 @@ class Processor(cx_Parser.DispatchProcessor):
 
     def __LocalIdentifiers(self):
         """Return a sorted list of local identifiers."""
-        childValues = self.__identifiers[-1].keys()
+        childValues = list(self.__identifiers[-1].keys())
         childValues.sort()
         return childValues
 

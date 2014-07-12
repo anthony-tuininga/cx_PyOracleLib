@@ -2,7 +2,7 @@
 
 import cx_Parser
 
-import Statements
+from . import Statements
 
 __all__ = [ "Processor" ]
 

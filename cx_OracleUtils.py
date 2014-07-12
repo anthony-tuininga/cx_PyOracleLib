@@ -79,9 +79,9 @@ def GetConstantRepr(value, binaryData = False):
         return "null"
     elif isinstance(value, cx_Oracle.LOB):
         value = value.read()
-    if isinstance(value, (int, long, float)):
+    if isinstance(value, (int, float)):
         return str(value)
-    elif isinstance(value, basestring):
+    elif isinstance(value, str):
         if binaryData:
             parts = []
             while value:

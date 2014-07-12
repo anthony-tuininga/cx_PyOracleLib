@@ -1,3 +1,3 @@
-from Grammar import *
-from Processor import *
+from .Grammar import *
+from .Processor import *
 

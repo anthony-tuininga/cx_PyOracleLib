@@ -23,7 +23,7 @@ class Processor(object):
         cx_Logging.Trace("%s", separator)
         if sys.stdout.isatty() and not sys.stderr.isatty():
             now = datetime.datetime.today()
-            print now.strftime("%Y/%m/%d %H:%M:%S"), message
+            print(now.strftime("%Y/%m/%d %H:%M:%S"), message)
             sys.stdout.flush()
 
     def ProcessCommand(self, command):
@@ -50,8 +50,7 @@ class CommandMetaClass(type):
             cls.classByExtension[cls.extension] = cls
 
 
-class CommandBase(object):
-    __metaclass__ = CommandMetaClass
+class CommandBase(object, metaclass = CommandMetaClass):
     classByExtension = {}
     extension = None
 
@@ -85,7 +84,7 @@ class ExecuteSQLCommands(CommandBase):
                 else:
                     try:
                         statement.Process(cursor)
-                    except cx_Exceptions.BaseException, error:
+                    except cx_Exceptions.BaseException as error:
                         lineNumber = statement.lineNumber
                         if isinstance(error, cx_OracleEx.DatabaseException) \
                                 and error.dbErrorOffset is not None:
@@ -95,7 +94,7 @@ class ExecuteSQLCommands(CommandBase):
                         if not processor.onErrorContinue:
                             raise
                         cx_Logging.Error("%s", error.message)
-        except cx_OracleParser.ParsingFailed, value:
+        except cx_OracleParser.ParsingFailed as value:
             cx_Logging.Error("Parsing failed at line %s (%s...)",
                     value.arguments["lineNumber"],
                     value.arguments["remainingString"][:100])

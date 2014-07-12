@@ -1,6 +1,6 @@
 """Defines class for importing data from an export file."""
 
-import cPickle
+import pickle
 import cx_Logging
 import cx_Oracle
 import os
@@ -24,7 +24,7 @@ class Importer:
         """Return a list of the data stored in the table."""
         rows = []
         while True:
-            row = cPickle.load(self.inFile)
+            row = pickle.load(self.inFile)
             if row is None:
                 break
             rows.append(row)
@@ -36,7 +36,7 @@ class Importer:
         numRows = 0
         rowsToInsert = []
         while True:
-            row = cPickle.load(self.inFile)
+            row = pickle.load(self.inFile)
             if row is None:
                 break
             rowsToInsert.append(row)
@@ -58,15 +58,15 @@ class Importer:
             self.reportFunc(numRows)
         return numRows
 
-    def next(self):
+    def __next__(self):
         """Return the next table name to process."""
-        tableName = cPickle.load(self.inFile)
+        tableName = pickle.load(self.inFile)
         if tableName is None:
             raise StopIteration
         columnNames = []
         bindVarNames = []
         bindVars = []
-        columns = cPickle.load(self.inFile)
+        columns = pickle.load(self.inFile)
         for name, dataType in columns:
             dataSize = 0
             if "," in dataType:
@@ -102,6 +102,6 @@ class Importer:
 
     def SkipTable(self):
         """Skip the import of the table."""
-        while cPickle.load(self.inFile):
+        while pickle.load(self.inFile):
             pass
 

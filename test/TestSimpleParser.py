@@ -12,8 +12,8 @@ parser = cx_OracleParser.SimpleParser()
 try:
     for statement in parser.Parse(file(options.fileName).read(),
             "dummy", productionName = options.productionName):
-        print statement
-except cx_OracleParser.ParsingFailed, value:
-    print "Parsing failed at position:", value.arguments["pos"]
-    print "Remaining string:", value.arguments["remainingString"]
+        print(statement)
+except cx_OracleParser.ParsingFailed as value:
+    print("Parsing failed at position:", value.arguments["pos"])
+    print("Remaining string:", value.arguments["remainingString"])
 

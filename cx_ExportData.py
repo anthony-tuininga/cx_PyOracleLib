@@ -1,9 +1,8 @@
 """Module for use in exporting data to a file."""
 
-import cPickle
-import cStringIO
 import cx_Logging
 import cx_Oracle
+import pickle
 import sys
 
 # define constant for pickle protocol
@@ -25,8 +24,8 @@ class Exporter:
         self.cursor.execute("select * from " + tableName)
         columns = [(r[0], self.__StringRepOfType(r[1], r[2])) \
                 for r in self.cursor.description]
-        cPickle.dump(tableName, self.outFile, BINARY)
-        cPickle.dump(columns, self.outFile, BINARY)
+        pickle.dump(tableName, self.outFile, BINARY)
+        pickle.dump(columns, self.outFile, BINARY)
 
     def __ExportTableRows(self, rowsToSkip, rowLimit):
         """Export the rows in the table to the file."""
@@ -41,12 +40,12 @@ class Exporter:
                 numRows -= 1
                 break
             elif numRows > rowsToSkip:
-                cPickle.dump(row, outFile, BINARY)
+                pickle.dump(row, outFile, BINARY)
             if reportPoint is not None and numRows % reportPoint == 0:
                 cx_Logging.Trace(format, numRows)
         if reportPoint is None or numRows == 0 or numRows % reportPoint != 0:
             cx_Logging.Trace(format, numRows)
-        cPickle.dump(None, outFile, BINARY)
+        pickle.dump(None, outFile, BINARY)
 
     def __StringRepOfType(self, dataType, displaySize):
         """Return the string representation of the type."""
@@ -59,20 +58,20 @@ class Exporter:
                 "LONG_STRING", "TIMESTAMP"):
             if getattr(cx_Oracle, stringRep) == dataType:
                 return stringRep
-        raise "Unsupported type!", dataType
+        raise Exception("Unsupported type: %s!" % dataType)
 
     def ExportTable(self, tableName, rowsToSkip = None, rowLimit = None):
         """Export the data in the table to the file."""
         if rowsToSkip is None:
             rowsToSkip = 0
         if rowLimit is None:
-            rowLimit = sys.maxint
+            rowLimit = sys.maxsize
         self.__ExportTableHeader(tableName)
         self.__ExportTableRows(rowsToSkip, rowLimit)
 
     def FinalizeExport(self):
         """Finalize the export."""
-        cPickle.dump(None, self.outFile, BINARY)
+        pickle.dump(None, self.outFile, BINARY)
 
     def TablesInSchema(self):
         """Return a list of tables found in the schema."""

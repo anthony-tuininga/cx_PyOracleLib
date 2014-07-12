@@ -3,9 +3,7 @@
 import os
 import sys
 
-import Object
-import Statements
-import Utils
+from . import Object, Statements, Utils
 
 __all__ = [ "Describer", "Exporter", "FileNameForObject" ]
 
@@ -113,21 +111,21 @@ class Describer(object):
 
     def ExportConstraints(self):
         """Export all of the constraints."""
-        print >> sys.stderr, "Describing constraints..."
+        print("Describing constraints...", file = sys.stderr)
         self.ExportObjects(Object.ObjectIterator(self.environment,
                 "AllConstraints", Statements.CONSTRAINTS,
                 "where o.owner %s" % self.schemasClause, Object.Constraint))
 
     def ExportContexts(self):
         """Export all of the contexts."""
-        print >> sys.stderr, "Describing contexts..."
+        print("Describing contexts...", file = sys.stderr)
         whereClause = "where o.schema %s" % self.schemasClause
         self.ExportObjects(Object.ObjectIterator(self.environment, "Contexts",
                 Statements.CONTEXTS, whereClause, Object.Context))
 
     def ExportIndexes(self):
         """Export all of the indexes."""
-        print >> sys.stderr, "Describing indexes..."
+        print("Describing indexes...", file = sys.stderr)
         self.ExportObjects(Object.ObjectIterator(self.environment,
                 "AllIndexes", Statements.INDEXES,
                 "where o.owner %s" % self.schemasClause, Object.Index))
@@ -174,7 +172,7 @@ class Describer(object):
 
     def ExportRoles(self):
         """Export all roles granted with admin option to schemas exported."""
-        print >> sys.stderr, "Describing roles..."
+        print("Describing roles...", file = sys.stderr)
         whereClause = "where o.role in (select granted_role " + \
                 "from dba_role_privs where admin_option = 'YES' " + \
                 "and grantee %s) or o.role %s" % \
@@ -184,7 +182,7 @@ class Describer(object):
 
     def ExportSequences(self):
         """Export all of the sequences."""
-        print >> sys.stderr, "Describing sequences..."
+        print("Describing sequences...", file = sys.stderr)
         self.ExportObjects(Object.ObjectIterator(self.environment,
                 "AllSequences", Statements.SEQUENCES,
                 "where o.sequence_owner %s" % self.schemasClause,
@@ -192,18 +190,18 @@ class Describer(object):
 
     def ExportSource(self):
         """Exports all source objects (in correct dependency order)."""
-        print >> sys.stderr, "Retrieving interdependent objects..."
+        print("Retrieving interdependent objects...", file = sys.stderr)
         objects = self.RetrieveSourceObjects()
-        print >> sys.stderr, "Retrieving dependencies..."
+        print("Retrieving dependencies...", file = sys.stderr)
         dependencies = self.RetrieveDependencies()
-        print >> sys.stderr, len(objects),
-        print >> sys.stderr, "interdependent objects to describe..."
+        print(len(objects), end=' ', file = sys.stderr)
+        print("interdependent objects to describe...", file = sys.stderr)
         for owner, name, type in Utils.OrderObjects(objects, dependencies):
             self.RetrieveAndExportObject(owner, name, type)
 
     def ExportSynonyms(self):
         """Export all of the synonyms."""
-        print >> sys.stderr, "Describing synonyms..."
+        print("Describing synonyms...", file = sys.stderr)
         whereClause = "where o.owner %s or o.owner = 'PUBLIC' " + \
                       "and o.table_owner %s"
         self.ExportObjects(Object.ObjectIterator(self.environment,
@@ -213,21 +211,21 @@ class Describer(object):
 
     def ExportTables(self):
         """Export all of the tables."""
-        print >> sys.stderr, "Describing tables..."
+        print("Describing tables...", file = sys.stderr)
         self.ExportObjects(Object.ObjectIterator(self.environment,
                 "AllTables", Statements.TABLES,
                 "where o.owner %s" % self.schemasClause, Object.Table))
 
     def ExportTriggers(self):
         """Export all of the triggers."""
-        print >> sys.stderr, "Describing triggers..."
+        print("Describing triggers...", file = sys.stderr)
         self.ExportObjects(Object.ObjectIterator(self.environment,
                 "AllTriggers", Statements.TRIGGERS,
                 "where o.owner %s" % self.schemasClause, Object.Trigger))
 
     def ExportUsers(self):
         """Export all of the users."""
-        print >> sys.stderr, "Describing users..."
+        print("Describing users...", file = sys.stderr)
         whereClause = "where o.username %s" % self.schemasClause
         self.ExportObjects(Object.ObjectIterator(self.environment, "AllUsers",
                 Statements.USERS, whereClause, Object.User))
@@ -257,7 +255,7 @@ class Describer(object):
         if self.nameOnly:
             if objectOwner == "PUBLIC":
                 objectType = "%s %s" % (objectOwner, objectType)
-            print >> self.outFile, objectName, "(%s)" % objectType
+            print(objectName, "(%s)" % objectType, file = self.outFile)
         else:
             object = self.environment.ObjectByType(objectOwner, objectName,
                     objectType)
@@ -305,10 +303,10 @@ class Describer(object):
         if objectOwner != self.currentOwner and objectType != "PUBLIC SYNONYM":
             self.currentOwner = objectOwner
             if self.nameOnly:
-                print >> self.outFile
+                print(file = self.outFile)
             nameForOutput = self.environment.NameForOutput(self.currentOwner)
-            print >> self.outFile, "connect", nameForOutput
-            print >> self.outFile
+            print("connect", nameForOutput, file = self.outFile)
+            print(file = self.outFile)
 
     def SourceTypes(self):
         """Return the list of source types to be included in the output."""
@@ -360,7 +358,7 @@ class Exporter(Describer):
 
     def ExportSource(self):
         """Export all of the source objects."""
-        print >> sys.stderr, "Describing interdependent objects..."
+        print("Describing interdependent objects...", file = sys.stderr)
         for owner, name, type in self.RetrieveSourceObjects():
             if type == "VIEW":
                 continue
@@ -370,7 +368,7 @@ class Exporter(Describer):
 
     def ExportViews(self):
         """Export all of the views."""
-        print >> sys.stderr, "Describing views..."
+        print("Describing views...", file = sys.stderr)
         self.ExportObjects(Object.ObjectIterator(self.environment, "AllViews",
                 Statements.VIEWS, "where o.owner %s" % self.schemasClause,
                 Object.View))

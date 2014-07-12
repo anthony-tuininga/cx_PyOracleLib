@@ -1,12 +1,12 @@
 """Defines classes used for describing Oracle objects."""
 
-from __future__ import generators
+
 import cx_Exceptions
 import cx_OracleUtils
 import sys
 
-import Statements
-import Utils
+from . import Statements
+from . import Utils
 
 class Object(object):
     """Base class for describing Oracle objects."""
@@ -46,9 +46,11 @@ class ObjectWithComments(Object):
                 owner = self.owner,
                 name = self.name)
         for comments, in cursor:
-            print >> outFile, "comment on table", self.nameForOutput, "is",
-            print >> outFile, "%s;" % cx_OracleUtils.QuotedString(comments)
-            print >> outFile
+            print("comment on table", self.nameForOutput, "is", end=' ',
+                    file = outFile)
+            print("%s;" % cx_OracleUtils.QuotedString(comments),
+                    file = outFile)
+            print(file = outFile)
         cursor, isPrepared = self.environment.Cursor("ColumnComments")
         if not isPrepared:
             cursor.prepare("""
@@ -67,9 +69,11 @@ class ObjectWithComments(Object):
         for name, comments in cursor:
             nameForOutput = "%s.%s" % \
                     (self.nameForOutput, self.environment.NameForOutput(name))
-            print >> outFile, "comment on column", nameForOutput, "is",
-            print >> outFile, "%s;" % cx_OracleUtils.QuotedString(comments)
-            print >> outFile
+            print("comment on column", nameForOutput, "is", end=' ',
+                    file = outFile)
+            print("%s;" % cx_OracleUtils.QuotedString(comments),
+                    file = outFile)
+            print(file = outFile)
 
 
 class ObjectWithPrivileges(Object):
@@ -86,7 +90,7 @@ class ObjectWithPrivileges(Object):
             grantees.append(grantee)
 
         # create privilege sets
-        keys = granteesByPrivilege.keys()
+        keys = list(granteesByPrivilege.keys())
         keys.sort()
         privilegeSets = []
         for key in keys:
@@ -139,12 +143,12 @@ class ObjectWithPrivileges(Object):
         else:
             finalClause = ";"
         if len(grantees) == 1:
-            print >> outFile, "to", grantees[0] + finalClause
+            print("to", grantees[0] + finalClause, file = outFile)
         else:
             clauses = Utils.ClausesForOutput(grantees, "  ", "  ", ",")
-            print >> outFile, "to"
-            print >> outFile, clauses + finalClause
-        print >> outFile
+            print("to", file = outFile)
+            print(clauses + finalClause, file = outFile)
+        print(file = outFile)
 
     def ExportPrivileges(self, outFile, mergeGrants):
         """Export privileges for the object to the file as SQL statements."""
@@ -154,12 +158,12 @@ class ObjectWithPrivileges(Object):
             privilegeSets = self.__UnmergedPrivilegeSets()
         for grantable, privileges, grantees in privilegeSets:
             if len(privileges) == 1:
-                print >> outFile, "grant", privileges[0]
+                print("grant", privileges[0], file = outFile)
             else:
                 clauses = Utils.ClausesForOutput(privileges, "  ", "  ", ",")
-                print >> outFile, "grant"
-                print >> outFile, clauses
-            print >> outFile, "on", self.nameForOutput
+                print("grant", file = outFile)
+                print(clauses, file = outFile)
+            print("on", self.nameForOutput, file = outFile)
             self._OutputGrantees(outFile, grantees, grantable)
 
 
@@ -178,7 +182,7 @@ class ObjectWithColumnPrivileges(ObjectWithPrivileges):
             grantees.append(grantee)
 
         # create privilege sets
-        keys = granteesByPrivilege.keys()
+        keys = list(granteesByPrivilege.keys())
         keys.sort()
         privilegeSets = []
         for key in keys:
@@ -238,8 +242,8 @@ class ObjectWithColumnPrivileges(ObjectWithPrivileges):
             privilegeSets = self.__UnmergedPrivilegeSets()
         for grantable, privilege, grantees, columns in privilegeSets:
             privilegeForOutput = "%s(%s)" % (privilege, ", ".join(columns))
-            print >> outFile, "grant", privilegeForOutput
-            print >> outFile, "on", self.nameForOutput
+            print("grant", privilegeForOutput, file = outFile)
+            print("on", self.nameForOutput, file = outFile)
             self._OutputGrantees(outFile, grantees, grantable)
 
 
@@ -282,7 +286,7 @@ class UserOrRole(ObjectWithPrivileges):
             if privileges is None:
                 privileges = privilegeDict[adminOption] = []
             privileges.append(privilege)
-        return privilegeDict.items()
+        return list(privilegeDict.items())
 
     def __UnmergedPrivilegeSets(self, allPrivileges):
         """Return a list of unmerged privilege sets for export."""
@@ -305,13 +309,13 @@ class UserOrRole(ObjectWithPrivileges):
             if adminOption == "YES":
                 finalClause = "\nwith admin option;"
             if len(privileges) == 1:
-                print >> outFile, "grant", privileges[0]
+                print("grant", privileges[0], file = outFile)
             else:
                 clauses = Utils.ClausesForOutput(privileges, "  ", "  ", ",")
-                print >> outFile, "grant"
-                print >> outFile, clauses
-            print >> outFile, "to", self.nameForOutput + finalClause
-            print >> outFile
+                print("grant", file = outFile)
+                print(clauses, file = outFile)
+            print("to", self.nameForOutput + finalClause, file = outFile)
+            print(file = outFile)
 
 
 class ObjectWithStorage(Object):
@@ -376,13 +380,13 @@ class Context(Object):
         packageName = "%s.%s" % \
                 (self.environment.NameForOutput(self.packageOwner),
                  self.environment.NameForOutput(self.packageName))
-        print >> outFile, "create or replace context", self.nameForOutput
+        print("create or replace context", self.nameForOutput, file = outFile)
         if self.contextType == "ACCESSED LOCALLY":
-            print >> outFile, "using", packageName + ";"
+            print("using", packageName + ";", file = outFile)
         else:
-            print >> outFile, "using", packageName
-            print >> outFile, self.contextType.lower() + ";"
-        print >> outFile
+            print("using", packageName, file = outFile)
+            print(self.contextType.lower() + ";", file = outFile)
+        print(file = outFile)
 
 
 class Constraint(Object):
@@ -457,39 +461,40 @@ class Constraint(Object):
     def Export(self, outFile, wantTablespace, wantStorage):
         """Export the object as a SQL statement."""
         nameForOutput = self.environment.NameForOutput(self.tableName)
-        print >> outFile, "alter table", nameForOutput
-        print >> outFile, "add constraint %s" % self.nameForOutput
+        print("alter table", nameForOutput, file = outFile)
+        print("add constraint %s" % self.nameForOutput, file = outFile)
         finalClauses = self.__FinalClauses(wantTablespace, wantStorage)
         if self.constraintType == "C":
-            print >> outFile, "check (%s)%s;" % (self.condition, finalClauses)
+            print("check (%s)%s;" % (self.condition, finalClauses),
+                    file = outFile)
         elif self.constraintType == "P":
             clauses = Utils.ClausesForOutput(self.columns, "  ", "  ", ",")
-            print >> outFile, "primary key ("
-            print >> outFile, clauses
-            print >> outFile, ")%s;" % finalClauses
+            print("primary key (", file = outFile)
+            print(clauses, file = outFile)
+            print(")%s;" % finalClauses, file = outFile)
         elif self.constraintType == "U":
             clauses = Utils.ClausesForOutput(self.columns, "  ", "  ", ",")
-            print >> outFile, "unique ("
-            print >> outFile, clauses
-            print >> outFile, ")%s;" % finalClauses
+            print("unique (", file = outFile)
+            print(clauses, file = outFile)
+            print(")%s;" % finalClauses, file = outFile)
         elif self.constraintType == "R":
             clauses = Utils.ClausesForOutput(self.columns, "  ", "  ", ",")
-            print >> outFile, "foreign key ("
-            print >> outFile, clauses
+            print("foreign key (", file = outFile)
+            print(clauses, file = outFile)
             tableName = self.refConstraint.tableName
             refName = self.environment.NameForOutput(tableName)
             if self.refConstraint.owner != self.owner:
                 refName = "%s.%s" % \
                         (self.refConstraint.ownerForOutput, refName)
-            print >> outFile, ") references %s (" % refName
+            print(") references %s (" % refName, file = outFile)
             clauses = Utils.ClausesForOutput(self.refConstraint.columns, "  ",
                     "  ", ",")
-            print >> outFile, clauses
+            print(clauses, file = outFile)
             if self.deleteRule:
                 finalClauses = " on delete %s%s" % \
                         (self.deleteRule, finalClauses)
-            print >> outFile, ")%s;" % finalClauses
-        print >> outFile
+            print(")%s;" % finalClauses, file = outFile)
+        print(file = outFile)
 
 
 class Index(ObjectWithStorage):
@@ -618,13 +623,13 @@ class Index(ObjectWithStorage):
 
     def Export(self, outFile, wantTablespace, wantStorage):
         """Export the object as a SQL statement."""
-        print >> outFile, "create",
+        print("create", end=' ', file = outFile)
         if self.typeModifier:
-            print >> outFile, self.typeModifier.lower(),
-        print >> outFile, self.type.lower(), self.nameForOutput
+            print(self.typeModifier.lower(), end=' ', file = outFile)
+        print(self.type.lower(), self.nameForOutput, file = outFile)
         tableName = self.environment.NameForOutput(self.tableName)
-        print >> outFile, "on", tableName, "("
-        print >> outFile, "  " + ",\n  ".join(self.columns)
+        print("on", tableName, "(", file = outFile)
+        print("  " + ",\n  ".join(self.columns), file = outFile)
         clauses = []
         if self.reversed:
             clauses.append("reverse")
@@ -638,8 +643,8 @@ class Index(ObjectWithStorage):
             if self.parameters is not None:
                 clauses.append("parameters ('%s')" % self.parameters)
         clauses = Utils.ClausesForOutput(clauses, " ", "  ", "")
-        print >> outFile, ")%s;" % clauses
-        print >> outFile
+        print(")%s;" % clauses, file = outFile)
+        print(file = outFile)
 
 
 class Library(Object):
@@ -651,10 +656,11 @@ class Library(Object):
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
-        print >> outFile, "create or replace library", self.nameForOutput, "as"
-        print >> outFile, "'%s';" % self.filespec.strip()
-        print >> outFile, "/"
-        print >> outFile
+        print("create or replace library", self.nameForOutput, "as",
+                file = outFile)
+        print("'%s';" % self.filespec.strip(), file = outFile)
+        print("/", file = outFile)
+        print(file = outFile)
 
 
 class Lob(ObjectWithStorage):
@@ -754,8 +760,8 @@ class Role(UserOrRole):
             clause = " identified by password;"
         else:
             clause = ";"
-        print >> outFile, "create role", self.nameForOutput + clause
-        print >> outFile
+        print("create role", self.nameForOutput + clause, file = outFile)
+        print(file = outFile)
 
 
 class Sequence(ObjectWithPrivileges):
@@ -792,9 +798,9 @@ class Sequence(ObjectWithPrivileges):
         if self.orderFlag != "N":
             options.append("order")
         optionsString = "".join(["\n  " + o for o in options])
-        print >> outFile, "create sequence",
-        print >> outFile, self.nameForOutput + optionsString + ";"
-        print >> outFile
+        print("create sequence", end=' ', file = outFile)
+        print(self.nameForOutput + optionsString + ";", file = outFile)
+        print(file = outFile)
 
 
 class StoredProc(Object):
@@ -823,9 +829,9 @@ class StoredProc(Object):
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
-        print >> outFile, "create or replace", self.source
-        print >> outFile, "/"
-        print >> outFile
+        print("create or replace", self.source, file = outFile)
+        print("/", file = outFile)
+        print(file = outFile)
 
 
 class StoredProcWithPrivileges(StoredProc, ObjectWithPrivileges):
@@ -864,10 +870,11 @@ class Synonym(Object):
             name = "%s.%s" % (owner, name)
         if self.dbLink:
             name += "@%s" % self.dbLink.lower()
-        print >> outFile, "create", self.type.lower(), self.nameForOutput,
-        print >> outFile, "for"
-        print >> outFile, name + ";"
-        print >> outFile
+        print("create", self.type.lower(), self.nameForOutput, end=' ',
+                file = outFile)
+        print("for", file = outFile)
+        print(name + ";", file = outFile)
+        print(file = outFile)
 
 
 class Table(ObjectWithStorage, ObjectWithTriggers, \
@@ -1014,11 +1021,11 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
             clauses.append("constraint %s primary key (\n%s\n  )" % \
                     (primaryKey.nameForOutput, colClauses))
         clauses = Utils.ClausesForOutput(clauses, "  ", "  ", ",")
-        print >> outFile, "create",
+        print("create", end=' ', file = outFile)
         if self.temporary:
-            print >> outFile, "global temporary",
-        print >> outFile, self.type.lower(), self.nameForOutput, "("
-        print >> outFile, clauses
+            print("global temporary", end=' ', file = outFile)
+        print(self.type.lower(), self.nameForOutput, "(", file = outFile)
+        print(clauses, file = outFile)
         clauses = []
         if self.temporary:
             clauses.append("on commit %s rows" % self.onCommitAction)
@@ -1033,8 +1040,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
         if self.partitioned:
             self.__AddPartitionClauses(clauses, wantTablespace, wantStorage)
         clauses = Utils.ClausesForOutput(clauses, " ", "  ", "")
-        print >> outFile, ")%s;" % clauses
-        print >> outFile
+        print(")%s;" % clauses, file = outFile)
+        print(file = outFile)
 
     def Indexes(self):
         """Return an iterator for the indexes for the table."""
@@ -1076,12 +1083,13 @@ class Trigger(Object):
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
-        print >> outFile, "create or replace trigger", self.description.strip()
+        print("create or replace trigger", self.description.strip(),
+                file = outFile)
         if self.whenClause:
-            print >> outFile, "when (%s)" % self.whenClause
-        print >> outFile, self.body
-        print >> outFile, "/"
-        print >> outFile
+            print("when (%s)" % self.whenClause, file = outFile)
+        print(self.body, file = outFile)
+        print("/", file = outFile)
+        print(file = outFile)
 
 
 class User(UserOrRole):
@@ -1118,12 +1126,12 @@ class User(UserOrRole):
                 (Utils.SizeForOutput(s), self.environment.NameForOutput(t)) \
                 for t, s in self.quotas]
         finalClause = "".join(quotaClauses) + ";"
-        print >> outFile, "create user", self.nameForOutput,
-        print >> outFile, "identified by password"
-        print >> outFile, "  default tablespace", self.defaultTablespace
-        print >> outFile, "  temporary tablespace",
-        print >> outFile, self.temporaryTablespace + finalClause
-        print >> outFile
+        print("create user", self.nameForOutput, end=' ', file = outFile)
+        print("identified by password", file = outFile)
+        print("  default tablespace", self.defaultTablespace, file = outFile)
+        print("  temporary tablespace", end=' ', file = outFile)
+        print(self.temporaryTablespace + finalClause, file = outFile)
+        print(file = outFile)
 
 
 class View(ObjectWithTriggers, ObjectWithColumnPrivileges, ObjectWithComments):
@@ -1154,14 +1162,15 @@ class View(ObjectWithTriggers, ObjectWithColumnPrivileges, ObjectWithComments):
 
     def Export(self, outFile):
         """Export the object as a SQL statement."""
-        print >> outFile, "create or replace view", self.nameForOutput,
+        print("create or replace view", self.nameForOutput, end=' ',
+                file = outFile)
         if self.columns:
-            print >> outFile, "("
-            print >> outFile, "  " + ",\n  ".join(self.columns)
-            print >> outFile, ")",
-        print >> outFile, "as"
-        print >> outFile, self.text.strip() + ";"
-        print >> outFile
+            print("(", file = outFile)
+            print("  " + ",\n  ".join(self.columns), file = outFile)
+            print(")", end=' ', file = outFile)
+        print("as", file = outFile)
+        print(self.text.strip() + ";", file = outFile)
+        print(file = outFile)
 
 
 class ViewNoRetrieve(View):

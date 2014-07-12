@@ -56,7 +56,7 @@ class Connection(cx_Oracle.Connection):
 
     def InsertRow(self, tableName, **args):
         """Insert a row into the table."""
-        names = args.keys()
+        names = list(args.keys())
         bindNames = [":%s" % n for n in names]
         statement = "insert into %s (%s) values (%s)" % \
                 (tableName, ",".join(names), ",".join(bindNames))
@@ -71,11 +71,6 @@ class Connection(cx_Oracle.Connection):
             return True
         except:
             return False
-
-    def OutputStringsAsUnicode(self, cursor, name, defaultType, size,
-            precision, scale):
-        if defaultType in (cx_Oracle.STRING, cx_Oracle.FIXED_CHAR):
-            return cursor.var(unicode, size, cursor.arraysize)
 
     def UpdateRow(self, tableName, *whereNames, **args):
         """Update a row in the table."""
@@ -110,7 +105,7 @@ class Cursor(cx_Oracle.Cursor):
             if self.connection.logSql \
                     and cx_Logging.Debug("SQL\n%s", _sql or self.statement):
                 if isinstance(_args, dict):
-                    _output = [(k, v) for k, v in _args.iteritems() \
+                    _output = [(k, v) for k, v in _args.items() \
                             if not k.endswith("_")]
                     _output.sort()
                 else:
@@ -124,7 +119,7 @@ class Cursor(cx_Oracle.Cursor):
             exc.details.append("SQL: %s" % _sql or self.statement)
             exc.details.append("Bind Variables:")
             if isinstance(_args, dict):
-                _output = [(k, v) for k, v in _args.iteritems() \
+                _output = [(k, v) for k, v in _args.items() \
                         if not k.endswith("_")]
                 _output.sort()
             else:

@@ -3,9 +3,6 @@
 import cx_Exceptions
 import sys
 
-import Object
-import Statements
-
 __all__ = [ "OrderObjects" ]
 
 def ClausesForOutput(clauses, firstString, restString, joinString):
@@ -18,9 +15,9 @@ def ClausesForOutput(clauses, firstString, restString, joinString):
 def DependenciesOfInterest(key, objectsOfInterest, dependencies,
         dependenciesOfInterest):
     """Return a list of dependencies on objects of interest."""
-    if dependencies.has_key(key):
+    if key in dependencies:
         for refKey in dependencies[key]:
-            if objectsOfInterest.has_key(refKey):
+            if refKey in objectsOfInterest:
                 dependenciesOfInterest[refKey] = None
             else:
                 DependenciesOfInterest(refKey, objectsOfInterest, dependencies,
@@ -65,7 +62,7 @@ def OrderObjects(objects, dependencies):
         # acquire a list of items which do not depend on anything
         references = {}
         keysToOutput = {}
-        for key, value in iDependOn.items():
+        for key, value in list(iDependOn.items()):
             if not value:
                 owner, name, type = key
                 if owner not in keysToOutput:
@@ -81,14 +78,14 @@ def OrderObjects(objects, dependencies):
 
         # detect a circular reference and avoid an infinite loop
         if not keysToOutput:
-            keys = iDependOn.keys()
+            keys = list(iDependOn.keys())
             keys.sort()
             for key in keys:
-                print >> sys.stderr, "%s.%s (%s)" % key
-                refKeys = iDependOn[key].keys()
+                print("%s.%s (%s)" % key, file = sys.stderr)
+                refKeys = list(iDependOn[key].keys())
                 refKeys.sort()
                 for refKey in refKeys:
-                    print >> sys.stderr, "    %s.%s (%s)" % refKey
+                    print("    %s.%s (%s)" % refKey, file = sys.stderr)
             raise CircularReferenceDetected()
 
         # for each owner that has something to describe
@@ -97,7 +94,7 @@ def OrderObjects(objects, dependencies):
             # determine the owner with the most references
             outputOwner = ""
             maxReferences = 0
-            keys = references.keys()
+            keys = list(references.keys())
             keys.sort()
             for key in keys:
                 value = references[key]
@@ -123,7 +120,7 @@ def OrderObjects(objects, dependencies):
                 nextKeys = []
                 tempKeys.sort()
                 for key in tempKeys:
-                    refKeys = dependsOnMe[key].keys()
+                    refKeys = list(dependsOnMe[key].keys())
                     refKeys.sort()
                     for refKey in dependsOnMe[key]:
                         del iDependOn[refKey][key]
