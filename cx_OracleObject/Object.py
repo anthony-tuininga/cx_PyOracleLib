@@ -919,7 +919,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
 
     def __ColumnClause(self, row):
         """Return a clause for exporting a column as a SQL statement."""
-        name, dataType, nullable, precision, scale, length, defaultValue = row
+        name, dataType, nullable, precision, scale, length, charLength, \
+                charType, defaultValue = row
         if dataType == "NUMBER" and precision is None and scale is not None:
             dataType = "integer"
         elif dataType.startswith("INTERVAL"):
@@ -931,8 +932,12 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
             if scale:
                 clause += ", %d" % int(scale)
             clause += ")"
-        elif dataType.find("CHAR") >= 0 or dataType == "RAW":
-            clause += "(%d)" % int(length)
+        elif charLength:
+            lengthClause = "%s char" % charLength if charType == "C" \
+                    else charLength
+            clause += "(%s)" % lengthClause
+        elif dataType == "RAW":
+            clause += "(%s)" % length
         if defaultValue:
             clause += "\n    default %s" % defaultValue.strip()
         if nullable == "N":
@@ -950,7 +955,9 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
                       nullable,
                       data_precision,
                       data_scale,
-                      nvl(char_col_decl_length, data_length),
+                      data_length,
+                      char_length,
+                      char_used,
                       data_default
                     from %s_tab_columns
                     where owner = :owner
