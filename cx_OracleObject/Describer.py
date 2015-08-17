@@ -351,7 +351,7 @@ class Exporter(Describer):
                 if not os.path.exists(dirName):
                     os.makedirs(dirName)
                 self.dirs[dirName] = None
-            self.outFile = file(fileName, "w")
+            self.outFile = open(fileName, "w")
         self.exportLevel += 1
         Describer.ExportObject(self, object)
         self.exportLevel -= 1
