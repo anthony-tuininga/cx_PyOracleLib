@@ -51,7 +51,8 @@ class Exporter:
         """Return the string representation of the type."""
         if dataType == cx_Oracle.NUMBER:
             return "STRING,%d" % displaySize
-        for stringRep in ("BINARY", "STRING", "ROWID", "FIXED_CHAR"):
+        for stringRep in ("BINARY", "STRING", "ROWID", "FIXED_CHAR", "NCHAR",
+                "FIXED_NCHAR"):
             if getattr(cx_Oracle, stringRep) == dataType:
                 return "%s,%d" % (stringRep, displaySize)
         for stringRep in ("BLOB", "CLOB", "NCLOB", "DATETIME", "LONG_BINARY",
