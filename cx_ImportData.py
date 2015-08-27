@@ -88,7 +88,7 @@ class Importer:
             self.inFile = sys.stdin
             self.inFileSize = None
         else:
-            self.inFile = file(fileName, "rb")
+            self.inFile = open(fileName, "rb")
             self.inFileSize = os.stat(fileName).st_size * 1.0
 
     def ReportProgress(self, numRows):
