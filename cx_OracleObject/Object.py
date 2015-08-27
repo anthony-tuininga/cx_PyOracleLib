@@ -933,7 +933,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
                 clause += ", %d" % int(scale)
             clause += ")"
         elif charLength:
-            lengthClause = "%s char" % charLength if charType == "C" \
+            lengthClause = "%s char" % charLength \
+                    if charType == "C" and dataType in ("CHAR", "VARCHAR2") \
                     else charLength
             clause += "(%s)" % lengthClause
         elif dataType == "RAW":
