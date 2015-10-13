@@ -969,7 +969,8 @@ class Table(ObjectWithStorage, ObjectWithTriggers, \
                 name = self.name)
         self.columns = cursor.fetchall()
         self.lobs = []
-        lobColumns = [c[0] for c in self.columns if c[1] in ("CLOB", "BLOB")]
+        lobColumns = [c[0] for c in self.columns \
+                if c[1] in ("CLOB", "BLOB", "NCLOB")]
         if lobColumns:
             self.lobs = list(ObjectIterator(self.environment, "Lobs",
                     Statements.LOBS,
