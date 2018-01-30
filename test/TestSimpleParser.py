@@ -10,7 +10,7 @@ options = parser.Parse()
 
 parser = cx_OracleParser.SimpleParser()
 try:
-    for statement in parser.Parse(file(options.fileName).read(),
+    for statement in parser.Parse(open(options.fileName).read(),
             "dummy", productionName = options.productionName):
         print(statement)
 except cx_OracleParser.ParsingFailed as value:
