@@ -1,3 +1,28 @@
+Changes from 2.5 to 3.0
+ 1) Added support for Python 3.
+ 2) Added support for cast expressions as requested by Alex Vanderwoude.
+ 3) Added support for index organized tables.
+ 4) Added the characters $ and # to the list of valid characters since they are
+    part of identifiers which may be found in PL/SQL code.
+ 5) Added support for defining the terminator that is used for completing a
+    statement so that the SQL can be written back out again if desired. Thanks
+    to Micah Friesen for the patch.
+ 6) Added support for wapped packages which aren't quite as nicely formed as
+    their source equivalents -- in particular the semicolon is not present.
+ 7) Added support for updating anonymous views.
+ 8) Added support for the cache clause of the create sequence statement as
+    requested by Micah Friesen.
+ 9) Allow nothing to follow the dashes that constitute a line comment; thanks to
+    Micah Friesen for discovering this.
+10) Added support for NCLOB type columns.
+11) Ensure that users and public synonyms do not have an owner added to them
+    since they do not have owners.
+12) As requested by Robert Ritchie, show the row that failed instead of having
+    to work your way through the list of all rows which could be considerable.
+13) Added support for a range clause as requested by Micah Friesen.
+14) Added support for columns declared with the syntax varchar(6 char) instead
+    of varchar2(6).
+
 Changes from 2.4 to 2.5
  1) Use exception classes rather than string exceptions everywhere.
  2) Added support for specifying "as sysdba" and "as sysoper" in the connection

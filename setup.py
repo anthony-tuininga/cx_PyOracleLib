@@ -26,7 +26,7 @@ packages = [
 
 setup(
         name = "cx_PyOracleLib",
-        version = "2.5",
+        version = "3.0",
         description = "Set of Python modules for handling Oracle databases",
         license = "See LICENSE.txt",
         long_description = "Set of Python modules for handling Oracle " + \
@@ -34,7 +34,7 @@ setup(
                 "in particular the cx_OracleTools project",
         author = "Anthony Tuininga",
         author_email = "anthony.tuininga@gmail.com",
-        url = "http://cx-pyoraclelib.sourceforge.net",
+        url = "https://github.com/anthony-tuininga/cx_PyOracleLib",
         py_modules = modules,
         packages = packages)
 
